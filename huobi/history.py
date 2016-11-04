@@ -28,7 +28,6 @@ frequency_to_seconds = {
     "1y"  : 60*60*24*360
 }
 
-
 def get_current_price(security):
     #取得最近1 minute bar的close
     minute_hist = get_price(security, count= 1, frequency="1m")
@@ -38,6 +37,7 @@ def get_current_price(security):
     return minute_hist['close'][-1]
 
 
+# TODO:把真实数据接进来
 def get_price(security, count=None, start_bar_time=None, end_bar_time=None, frequency="5m"):
     if count is not None and start_bar_time is not None:
         raise InvalidFilterError
