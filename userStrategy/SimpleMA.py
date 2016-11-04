@@ -3,7 +3,6 @@
 
 import numpy as np
 import pandas as pd
-
 import common.helper as helper
 
 # 回测阶段的策略配置，跑实盘的时候，所有Params中的配置都会被覆盖
