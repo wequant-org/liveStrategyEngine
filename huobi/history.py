@@ -147,17 +147,3 @@ def get_all_securities():
     result["settlement_currency"].append("cny")
     result = pd.DataFrame(result)
     return result
-
-
-
-'''
-data = get_price("huobi-cnybtc", count=50, frequency="5m")
-print(data)
-
-start_bar_time = datetime.datetime.strptime("2016-10-01 09:00:12","%Y-%m-%d %H:%M:%S")
-data = get_price("huobi-cnybtc", start_bar_time=start_bar_time, frequency="5m")
-print(data)
-
-
-print( get_all_securities())
-'''
