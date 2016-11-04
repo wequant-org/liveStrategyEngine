@@ -7,7 +7,6 @@
 #   沉迷量化，无法自拔
 ###############################################################
 
-from common import helper
 from huobi.Util import *
 
 '''

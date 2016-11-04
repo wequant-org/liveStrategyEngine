@@ -9,12 +9,11 @@
 
 import datetime
 import logging
-
+from common.Errors import StartRunningTimeEmptyError
 from huobi import HuobiService
 from huobi.Util import *
 from okcoin.Util import getOkcoinSpot
-from common import helper
-from common.Errors import StartRunningTimeEmptyError
+
 
 class BanzhuanStrategy(object):
     def __init__(self, startRunningTime, orderRatio, timeInterval, orderWaitingTime, dataLogFixedTimeWindow, coinMarketType,

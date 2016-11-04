@@ -9,10 +9,9 @@
 
 # 客户端调用，用于查看API返回结果
 
+import okcoin.Config as config
 from okcoin.OkcoinFutureAPI import OKCoinFuture
 from okcoin.OkcoinSpotAPI import OKCoinSpot
-import okcoin.Config as config
-
 
 # 初始化apikey，secretkey,url
 apikey = config.apikey
