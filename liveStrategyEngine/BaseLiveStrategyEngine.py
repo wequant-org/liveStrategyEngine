@@ -26,12 +26,6 @@ class BaseLiveStrategyEngine(object):
         self.strat = strat
         self.user_data = UserData()
         self.strat.initialize(self)
-        '''
-        self.frequency = '1m'  # 强制性变量，策略类型，'d'表示策略使用日线回测，'h'表示策略使用小时线回测，'m'表示策略使用分钟线回测
-        # 可选列表 [ 1m, 5m, 15m, 30m, 60m, 1d, 1w, 1M, 1y ]
-        self.benchmark = 'huobi-cnybtc'  # 强制性变量
-        self.security_name = 'huobi-cnybtc'  # 用户自定义变量，想操作的security name
-        '''
 
         self.startRunningTime = startRunningTime
         self.timeInterval = history.frequency_to_seconds[self.frequency]# 每次循环结束之后睡眠的时间, 单位：秒
