@@ -21,8 +21,13 @@
 JanesdeMacBook-Pro:liveStrategyEngine janes$ pwd
 /Users/janes/PycharmProjects/wequantstrategy_sample/liveStrategyEngine
 
-在liveStrategyEngine的目录下，先set好PYTHONPATH到wequantstrategy_sample的绝对路径上去，然后执行python main.py，示例如下：
-JanesdeMacBook-Pro:liveStrategyEngine janes$ PYTHONPATH=/Users/janes/PycharmProjects/wequantstrategy_sample python main.py
+如果是Mac或者Linux系统，直接在liveStrategyEngine的目录下：
+chmod 777 run.sh
+./run.sh
+
+如果是Windows系统，在liveStrategyEngine的目录下，先set好PYTHONPATH到wequantstrategy_sample的绝对路径上去，然后执行python main.py
+
+
 
 
 
