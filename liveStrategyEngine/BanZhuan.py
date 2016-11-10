@@ -154,7 +154,7 @@ class BanzhuanStrategy(object):
         self.dataLogger.info("%s" % str(content))
 
     def go(self):
-        self.timeLog("log started at %s" % self.getStartRunningTime().strftime(self.TimeFormatForLog))
+        self.timeLog("日志启动于 %s" % self.getStartRunningTime().strftime(self.TimeFormatForLog))
         self.dataLog(
             content="time|huobi_cny|huobi_btc|huobi_ltc|huobi_cny_loan|huobi_btc_loan|huobi_ltc_loan|huobi_cny_frozen|huobi_btc_frozen|huobi_ltc_frozen|huobi_total|huobi_net|okcoin_cny|okcoin_btc|okcoin_ltc|okcoin_cny_frozen|okcoin_btc_frozen|okcoin_ltc_frozen|okcoin_total|okcoin_net|total_net")
         self.dataLog()
@@ -164,10 +164,10 @@ class BanzhuanStrategy(object):
             if self.dailyExitTime is not None and datetime.datetime.now() > datetime.datetime.strptime(
                                     datetime.date.today().strftime("%Y-%m-%d") + " " + self.dailyExitTime,
                                     "%Y-%m-%d %H:%M:%S"):
-                self.timeLog("Reach the EOD cutoff time %s, exit now." % self.dailyExitTime)
+                self.timeLog("抵达每日终结时间：%s, 现在退出." % self.dailyExitTime)
                 break
 
-            self.timeLog("waiting for %f seconds for next cycle..." % self.timeInterval)
+            self.timeLog("等待 %f 秒进入下一个循环..." % self.timeInterval)
             time.sleep(self.timeInterval)
 
             # calculate the net asset at a fixed time window
@@ -194,9 +194,9 @@ class BanzhuanStrategy(object):
             okcoin_buy_1_qty = okcoinDepth["bids"][0][1]
 
             if huobi_buy_1_price > okcoin_sell_1_price:  # 获利信号：OKcoin买，huobi卖
-                self.timeLog("Found signal")
-                self.timeLog("huobiDepth:%s" % str(huobiDepth))
-                self.timeLog("okcoinDepth:%s" % str(okcoinDepth))
+                self.timeLog("发现信号")
+                self.timeLog("火币深度:%s" % str(huobiDepth))
+                self.timeLog("okcoin深度:%s" % str(okcoinDepth))
 
                 # 每次只能吃掉一定ratio的深度
                 Qty = helper.myRound(min(huobi_buy_1_qty, okcoin_sell_1_qty) * self.orderRatio, 4)
@@ -207,27 +207,27 @@ class BanzhuanStrategy(object):
 
                 if Qty < self.huobi_min or Qty < self.okcoin_min:
                     self.timeLog(
-                        "Qty:%f is smaller than exchange minimum quantity(huobi min:%f, okcoin min:%f),so ignore this signal" % (
+                        "数量:%f 小于交易所最小交易数量(火币最小数量:%f, okcoin最小数量:%f),因此无法下单并忽略该信号" % (
                         Qty, self.huobi_min, self.okcoin_min))
                     continue
                 else:
                     # step1: 先处理卖
                     res = self.HuobiService.sellMarket(helper.coinTypeStructure[self.coinMarketType]["huobi"]["coin_type"], str(Qty), None, None, helper.coinTypeStructure[self.coinMarketType]["huobi"]["market"],SELL_MARKET)
                     if u"result" not in res or res[u"result"] != u'success':
-                        self.timeLog("fail to place market sell order with qty %f into huobi" % Qty)
+                        self.timeLog("下达火币市价卖单（数量：%f）失败" % Qty)
                         continue
                     order_id = res[u"id"]
                     # 查询订单执行情况
                     order_info = self.HuobiService.getOrderInfo(helper.coinTypeStructure[self.coinMarketType]["huobi"]["coin_type"], order_id, helper.coinTypeStructure[self.coinMarketType]["huobi"]["market"],ORDER_INFO)
-                    self.timeLog("placed below market sell order into huobi with quantity: %f, cash amount:%.2f" % (Qty, helper.myRound(Qty * huobi_buy_1_price, 2)))
+                    self.timeLog("下达如下火币市价卖单，数量：%f，金额：%.2f"%(Qty, helper.myRound(Qty * huobi_buy_1_price, 2)))
                     self.timeLog(str(order_info))
                     if order_info["status"] != 2:
-                        self.timeLog("waiting for %f for order to be completed" % self.orderWaitingTime)
+                        self.timeLog("等待%f秒直至订单完成"%self.orderWaitingTime)
                         time.sleep(self.orderWaitingTime)
                         order_info = self.HuobiService.getOrderInfo(helper.coinTypeStructure[self.coinMarketType]["huobi"]["coin_type"], order_id, helper.coinTypeStructure[self.coinMarketType]["huobi"]["market"], ORDER_INFO)
                         self.timeLog(str(order_info))
                     executed_qty = float(order_info["processed_amount"])
-                    self.timeLog("the market sell order in huobi has been executed with filled quantity: %f, received cash: %.2f" % (executed_qty, executed_qty*float(order_info["processed_price"])))
+                    self.timeLog("火币市价卖单已被执行，执行数量：%f，收到的现金：%.2f"%(executed_qty, executed_qty*float(order_info["processed_price"])))
                     self.dataLog()
 
                     # step2: 再执行买
@@ -236,25 +236,25 @@ class BanzhuanStrategy(object):
                     res2 = self.OKCoinService.trade(helper.coinTypeStructure[self.coinMarketType]["okcoin"]["coin_type"], "buy_market",
                                                     price=str(round(Qty2 * okcoin_sell_1_price, 2)))
                     if "result" not in res2 or res2["result"] != True:
-                        self.timeLog("fail to place market buy order with qty %f into okcoin" % Qty2)
+                        self.timeLog("下达okcoin市价买单（数量：%f）失败"%Qty2)
                         continue
                     order2_id = res2["order_id"]
                     # 查询订单执行情况
                     order2_info = self.OKCoinService.orderinfo(helper.coinTypeStructure[self.coinMarketType]["okcoin"]["coin_type"], str(order2_id))
-                    self.timeLog("placed below market buy order into okcoin with quantity: %f, cash amount: %.2f" %(Qty2,round(Qty2 * okcoin_sell_1_price, 2)))
+                    self.timeLog("下达如下okcoin市价买单，数量：%f，金额：%.2f"%(Qty2,round(Qty2 * okcoin_sell_1_price, 2)))
                     self.timeLog(str(order2_info))
                     if order2_info["orders"][0]["status"] != 2:
-                        self.timeLog("waiting for %f for order to be completed" % self.orderWaitingTime)
+                        self.timeLog("等待%f秒直至订单完成"%self.orderWaitingTime)
                         time.sleep(self.orderWaitingTime)
                         order2_info = self.OKCoinService.orderinfo(helper.coinTypeStructure[self.coinMarketType]["okcoin"]["coin_type"], str(order2_id))
                         self.timeLog(str(order2_info))
                     executed_qty_2 = order2_info["orders"][0]["deal_amount"]
-                    self.timeLog("the market buy order in okcoin has been executed with filled quantity: %f, spent cash: %.2f" % (executed_qty_2,executed_qty_2*order2_info["orders"][0]["avg_price"]))
+                    self.timeLog("okcoin市价买单已被执行，执行数量：%f，花费的现金：%.2f"%(executed_qty_2,executed_qty_2*order2_info["orders"][0]["avg_price"]))
                     self.dataLog()
             elif okcoin_buy_1_price > huobi_sell_1_price:  # 获利信号：OKcoin卖，huobi买
-                self.timeLog("Found signal")
-                self.timeLog("huobiDepth:%s" % str(huobiDepth))
-                self.timeLog("okcoinDepth:%s" % str(okcoinDepth))
+                self.timeLog("发现信号")
+                self.timeLog("火币深度:%s" % str(huobiDepth))
+                self.timeLog("okcoin深度:%s" % str(okcoinDepth))
 
                 # 每次只能吃掉一定ratio的深度
                 Qty = helper.myRound(min(huobi_sell_1_qty, okcoin_buy_1_qty) * self.orderRatio, 4)
@@ -263,28 +263,26 @@ class BanzhuanStrategy(object):
                 Qty = helper.getRoundedQuantity(Qty, self.coinMarketType)
 
                 if Qty < self.huobi_min or Qty < self.okcoin_min:
-                    self.timeLog(
-                        "Qty:%f is smaller than exchange minimum quantity(huobi min:%f, okcoin min:%f),so ignore this signal" % (
-                        Qty, self.huobi_min, self.okcoin_min))
+                    self.timeLog("数量:%f 小于交易所最小交易数量(火币最小数量:%f, okcoin最小数量:%f),因此无法下单并忽略该信号"%(Qty, self.huobi_min, self.okcoin_min))
                     continue
                 else:
                     # step1: 先处理卖
                     res = self.OKCoinService.trade(helper.coinTypeStructure[self.coinMarketType]["okcoin"]["coin_type"], "sell_market", amount=str(Qty))
                     if "result" not in res or res["result"] != True:
-                        self.timeLog("fail to place market sell order with qty %f into okcoin" % Qty)
+                        self.timeLog("下达okcoin市价卖单（数量：%f）失败"%Qty)
                         continue
                     order_id = res["order_id"]
                     # 查询订单执行情况
                     order_info = self.OKCoinService.orderinfo(helper.coinTypeStructure[self.coinMarketType]["okcoin"]["coin_type"], str(order_id))
-                    self.timeLog("placed below market sell order into okcoin with quantity: %f" % Qty)
+                    self.timeLog("下达如下okcoin市价卖单，数量：%f"%Qty)
                     self.timeLog(str(order_info))
                     if order_info["orders"][0]["status"] != 2:
-                        self.timeLog("waiting for %f for order to be completed" % self.orderWaitingTime)
+                        self.timeLog("等待%f秒直至订单完成" % self.orderWaitingTime)
                         time.sleep(self.orderWaitingTime)
                         order_info = self.OKCoinService.orderinfo(helper.coinTypeStructure[self.coinMarketType]["okcoin"]["coin_type"], str(order_id))
                         self.timeLog(str(order_info))
                     executed_qty = order_info["orders"][0]["deal_amount"]
-                    self.timeLog("the market sell order in okcoin has been executed with filled quantity: %f, received cash: %.2f" % (executed_qty,executed_qty*order_info["orders"][0]["avg_price"]))
+                    self.timeLog("okcoin市价卖单已被执行，执行数量：%f，收到的现金：%.2f"%(executed_qty,executed_qty*order_info["orders"][0]["avg_price"]))
                     self.dataLog()
 
                     # step2: 再执行买
@@ -292,20 +290,20 @@ class BanzhuanStrategy(object):
                     res2 = self.HuobiService.buyMarket(helper.coinTypeStructure[self.coinMarketType]["huobi"]["coin_type"], str(round(Qty2 * huobi_sell_1_price, 2)), None, None,helper.coinTypeStructure[self.coinMarketType]["huobi"]["market"],
                                                        BUY_MARKET)
                     if u"result" not in res2 or res2[u"result"] != u'success':
-                        self.timeLog("fail to place market buy order with qty %f into huobi" % Qty2)
+                        self.timeLog("下达火币市价买单（数量：%f）失败"%Qty2)
                         continue
                     order2_id = res2[u"id"]
                     # 查询订单执行情况
                     order2_info = self.HuobiService.getOrderInfo(helper.coinTypeStructure[self.coinMarketType]["huobi"]["coin_type"], order2_id, helper.coinTypeStructure[self.coinMarketType]["huobi"]["market"],ORDER_INFO)
-                    self.timeLog("placed below market buy order into huobi with quantity: %f, cash amount:%.2f" % (Qty2, round(Qty2 * huobi_sell_1_price, 2)))
+                    self.timeLog("下达如下火币市价买单，数量：%f，金额：%.2f"%(Qty2, round(Qty2 * huobi_sell_1_price, 2)))
                     self.timeLog(str(order2_info))
                     if order2_info["status"] != 2:
-                        self.timeLog("waiting for %f for order to be completed" % self.orderWaitingTime)
+                        self.timeLog("等待%f秒直至订单完成" % self.orderWaitingTime)
                         time.sleep(self.orderWaitingTime)
                         order2_info = self.HuobiService.getOrderInfo(helper.coinTypeStructure[self.coinMarketType]["huobi"]["coin_type"], order2_id, helper.coinTypeStructure[self.coinMarketType]["huobi"]["market"], ORDER_INFO)
                         self.timeLog(str(order2_info))
                     executed_qty_2 = float(order2_info["processed_amount"]) / float(order2_info["processed_price"])
-                    self.timeLog("the market buy order in huobi has been executed with filled quantity: %f, spent cash: %.2f" % (executed_qty_2, float(order2_info["processed_amount"])))
+                    self.timeLog("火币市价买单已被执行，执行数量：%f，花费的现金：%.2f"%(executed_qty_2, float(order2_info["processed_amount"])))
                     self.dataLog()
 
 
