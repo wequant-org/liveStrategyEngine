@@ -25,10 +25,7 @@ JanesdeMacBook-Pro:liveStrategyEngine janes$ pwd
 chmod 777 run.sh
 ./run.sh
 
-如果是Windows系统，在liveStrategyEngine的目录下，先set好PYTHONPATH到wequantstrategy_sample的绝对路径上去，然后执行python main.py
-
-
-
+如果是Windows系统，在liveStrategyEngine的目录下，参考run.bat修改成您的系统对应的各项参数，然后直接运行run.bat
 
 
 
