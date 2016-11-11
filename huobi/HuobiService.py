@@ -243,9 +243,10 @@ def getDepth(coinType, market, depth_size=5):
 获取最少订单数量
 @param coinType:币种 1 比特币 2 莱特币
 火币上比特币交易及莱特币交易都是0.0001的整数倍
+比特币最小交易数量：0.001,莱特币最小交易数量：0.01
 '''
 def getMinimumOrderQty(coinType):
     if coinType == 1:
-        return 0.0001
+        return 0.001
     else:
         return 0.01
