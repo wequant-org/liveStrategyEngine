@@ -7,8 +7,10 @@
 #   沉迷量化，无法自拔
 ###############################################################
 
+
 import datetime
 import logging
+
 import huobi.history as history
 from common.Account import Account
 from common.Data import Data
@@ -26,22 +28,17 @@ class BaseLiveStrategyEngine(object):
         self.strat = strat
         self.user_data = UserData()
         self.strat.initialize(self)
-
         self.startRunningTime = startRunningTime
         self.timeInterval = history.frequency_to_seconds[self.frequency]# 每次循环结束之后睡眠的时间, 单位：秒
         self.orderWaitingTime = orderWaitingTime  # 每次等待订单执行的最长时间
         self.dataLogFixedTimeWindow = dataLogFixedTimeWindow  # 每隔固定的时间打印账单信息，单位：秒
 
-        if self.security_name == "huobi-cnybtc":
+        if self.security == "huobi_cny_btc":
             self.coinMarketType = helper.COIN_TYPE_BTC_CNY
-        elif self.security_name == "huobi-cnyltc":
+        elif self.security == "huobi_cny_ltc":
             self.coinMarketType = helper.COIN_TYPE_LTC_CNY
         else:
-            raise TypeError("invalid security name '%s'"%self.security_name)
-        '''
-        helper.COIN_TYPE_BTC_CNY = "btc_cny"
-        helper.COIN_TYPE_LTC_CNY = "ltc_cny"
-        '''
+            raise TypeError("invalid security name '%s'"%self.security)
 
         self.dailyExitTime      = dailyExitTime #如果设置，则为每天程序的退出时间
         self.TimeFormatForFileName = "%Y%m%d%H%M%S%f"
@@ -103,34 +100,35 @@ class BaseLiveStrategyEngine(object):
         time.get_current_time = self.get_current_time
         self.time = time
 
+
     def get_current_time(self):
         return datetime.datetime.now()
 
     def updateAccountInfo(self, initial_setup = False):
         huobiAcct = self.getAccuntInfo()
-        self.account.huobi_btc = huobiAcct["huobi_btc"]
-        self.account.huobi_ltc = huobiAcct["huobi_ltc"]
-        self.account.huobi_cny = huobiAcct["huobi_cny"]
-        self.account.huobi_btc_loan = huobiAcct["huobi_btc_loan"]
-        self.account.huobi_ltc_loan = huobiAcct["huobi_ltc_loan"]
-        self.account.huobi_cny_loan = huobiAcct["huobi_cny_loan"]
-        self.account.huobi_btc_frozen = huobiAcct["huobi_btc_frozen"]
-        self.account.huobi_ltc_frozen = huobiAcct["huobi_ltc_frozen"]
-        self.account.huobi_cny_frozen = huobiAcct["huobi_cny_frozen"]
-        self.account.huobi_total = huobiAcct["huobi_total"]
-        self.account.huobi_net = huobiAcct["huobi_net"]
+        self.account.huobi_cny_btc = huobiAcct["huobi_cny_btc"]
+        self.account.huobi_cny_ltc = huobiAcct["huobi_cny_ltc"]
+        self.account.huobi_cny_cash = huobiAcct["huobi_cny_cash"]
+        self.account.huobi_cny_btc_loan = huobiAcct["huobi_cny_btc_loan"]
+        self.account.huobi_cny_ltc_loan = huobiAcct["huobi_cny_ltc_loan"]
+        self.account.huobi_cny_cash_loan = huobiAcct["huobi_cny_cash_loan"]
+        self.account.huobi_cny_btc_frozen = huobiAcct["huobi_cny_btc_frozen"]
+        self.account.huobi_cny_ltc_frozen = huobiAcct["huobi_cny_ltc_frozen"]
+        self.account.huobi_cny_cash_frozen = huobiAcct["huobi_cny_cash_frozen"]
+        self.account.huobi_cny_total = huobiAcct["huobi_cny_total"]
+        self.account.huobi_cny_net = huobiAcct["huobi_cny_net"]
         if initial_setup:
-            self.account_initial.huobi_btc = huobiAcct["huobi_btc"]
-            self.account_initial.huobi_ltc = huobiAcct["huobi_ltc"]
-            self.account_initial.huobi_cny = huobiAcct["huobi_cny"]
-            self.account_initial.huobi_btc_loan = huobiAcct["huobi_btc_loan"]
-            self.account_initial.huobi_ltc_loan = huobiAcct["huobi_ltc_loan"]
-            self.account_initial.huobi_cny_loan = huobiAcct["huobi_cny_loan"]
-            self.account_initial.huobi_btc_frozen = huobiAcct["huobi_btc_frozen"]
-            self.account_initial.huobi_ltc_frozen = huobiAcct["huobi_ltc_frozen"]
-            self.account_initial.huobi_cny_frozen = huobiAcct["huobi_cny_frozen"]
-            self.account_initial.huobi_total = huobiAcct["huobi_total"]
-            self.account_initial.huobi_net = huobiAcct["huobi_net"]
+            self.account_initial.huobi_cny_btc = huobiAcct["huobi_cny_btc"]
+            self.account_initial.huobi_cny_ltc = huobiAcct["huobi_cny_ltc"]
+            self.account_initial.huobi_cny_cash = huobiAcct["huobi_cny_cash"]
+            self.account_initial.huobi_cny_btc_loan = huobiAcct["huobi_cny_btc_loan"]
+            self.account_initial.huobi_cny_ltc_loan = huobiAcct["huobi_cny_ltc_loan"]
+            self.account_initial.huobi_cny_cash_loan = huobiAcct["huobi_cny_cash_loan"]
+            self.account_initial.huobi_cny_btc_frozen = huobiAcct["huobi_cny_btc_frozen"]
+            self.account_initial.huobi_cny_ltc_frozen = huobiAcct["huobi_cny_ltc_frozen"]
+            self.account_initial.huobi_cny_cash_frozen = huobiAcct["huobi_cny_cash_frozen"]
+            self.account_initial.huobi_cny_total = huobiAcct["huobi_cny_total"]
+            self.account_initial.huobi_cny_net = huobiAcct["huobi_cny_net"]
             self.account_initial.initial_time = datetime.datetime.now()
 
     def getStartRunningTime(self):
@@ -149,30 +147,30 @@ class BaseLiveStrategyEngine(object):
 
     def getAccuntInfo(self):
         huobiAcct = self.HuobiService.getAccountInfo(helper.coinTypeStructure[self.coinMarketType]["huobi"]["market"],ACCOUNT_INFO)
-        huobi_cny = float(huobiAcct[u'available_cny_display'])
-        huobi_btc = float(huobiAcct[u'available_btc_display'])
-        huobi_ltc = float(huobiAcct[u'available_ltc_display'])
-        huobi_cny_loan = float(huobiAcct[u'loan_cny_display'])
-        huobi_btc_loan = float(huobiAcct[u'loan_btc_display'])
-        huobi_ltc_loan = float(huobiAcct[u'loan_ltc_display'])
-        huobi_cny_frozen = float(huobiAcct[u'frozen_cny_display'])
-        huobi_btc_frozen = float(huobiAcct[u'frozen_btc_display'])
-        huobi_ltc_frozen = float(huobiAcct[u'frozen_ltc_display'])
-        huobi_total = float(huobiAcct[u'total'])
-        huobi_net = float(huobiAcct[u'net_asset'])
+        huobi_cny_cash = float(huobiAcct[u'available_cny_display'])
+        huobi_cny_btc = float(huobiAcct[u'available_btc_display'])
+        huobi_cny_ltc = float(huobiAcct[u'available_ltc_display'])
+        huobi_cny_cash_loan = float(huobiAcct[u'loan_cny_display'])
+        huobi_cny_btc_loan = float(huobiAcct[u'loan_btc_display'])
+        huobi_cny_ltc_loan = float(huobiAcct[u'loan_ltc_display'])
+        huobi_cny_cash_frozen = float(huobiAcct[u'frozen_cny_display'])
+        huobi_cny_btc_frozen = float(huobiAcct[u'frozen_btc_display'])
+        huobi_cny_ltc_frozen = float(huobiAcct[u'frozen_ltc_display'])
+        huobi_cny_total = float(huobiAcct[u'total'])
+        huobi_cny_net = float(huobiAcct[u'net_asset'])
 
         return {
-            "huobi_cny": huobi_cny,
-            "huobi_btc": huobi_btc,
-            "huobi_ltc": huobi_ltc,
-            "huobi_cny_loan": huobi_cny_loan,
-            "huobi_btc_loan": huobi_btc_loan,
-            "huobi_ltc_loan": huobi_ltc_loan,
-            "huobi_cny_frozen": huobi_cny_frozen,
-            "huobi_btc_frozen": huobi_btc_frozen,
-            "huobi_ltc_frozen": huobi_ltc_frozen,
-            "huobi_total": huobi_total,
-            "huobi_net": huobi_net
+            "huobi_cny_cash": huobi_cny_cash,
+            "huobi_cny_btc": huobi_cny_btc,
+            "huobi_cny_ltc": huobi_cny_ltc,
+            "huobi_cny_cash_loan": huobi_cny_cash_loan,
+            "huobi_cny_btc_loan": huobi_cny_btc_loan,
+            "huobi_cny_ltc_loan": huobi_cny_ltc_loan,
+            "huobi_cny_cash_frozen": huobi_cny_cash_frozen,
+            "huobi_cny_btc_frozen": huobi_cny_btc_frozen,
+            "huobi_cny_ltc_frozen": huobi_cny_ltc_frozen,
+            "huobi_cny_total": huobi_cny_total,
+            "huobi_cny_net": huobi_cny_net
         }
 
     def dataLog(self, content=None):
@@ -181,17 +179,17 @@ class BaseLiveStrategyEngine(object):
             t = datetime.datetime.now()
             content = "%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s" % \
                       (t.strftime(self.TimeFormatForLog),
-                       accountInfo["huobi_cny"],
-                       accountInfo["huobi_btc"],
-                       accountInfo["huobi_ltc"],
-                       accountInfo["huobi_cny_loan"],
-                       accountInfo["huobi_btc_loan"],
-                       accountInfo["huobi_ltc_loan"],
-                       accountInfo["huobi_cny_frozen"],
-                       accountInfo["huobi_btc_frozen"],
-                       accountInfo["huobi_ltc_frozen"],
-                       accountInfo["huobi_total"],
-                       accountInfo["huobi_net"])
+                       accountInfo["huobi_cny_cash"],
+                       accountInfo["huobi_cny_btc"],
+                       accountInfo["huobi_cny_ltc"],
+                       accountInfo["huobi_cny_cash_loan"],
+                       accountInfo["huobi_cny_btc_loan"],
+                       accountInfo["huobi_cny_ltc_loan"],
+                       accountInfo["huobi_cny_cash_frozen"],
+                       accountInfo["huobi_cny_btc_frozen"],
+                       accountInfo["huobi_cny_ltc_frozen"],
+                       accountInfo["huobi_cny_total"],
+                       accountInfo["huobi_cny_net"])
             self.last_data_log_time = t
         self.dataLogger.info("%s" % str(content))
 
@@ -211,7 +209,7 @@ class BaseLiveStrategyEngine(object):
             self.timeLog("quantity %s is smaller than 0.001, so did not place the sell order into market"%quantity)
             return
 
-        if security == "huobi-cnybtc":
+        if security == "huobi_cny_btc":
             coin_type = 1
         else:
             coin_type = 2
@@ -249,7 +247,7 @@ class BaseLiveStrategyEngine(object):
             self.timeLog("cash amount %s is smaller than 1, so did not place the buy order into market"%cash_amount)
             return
 
-        if security == "huobi-cnybtc":
+        if security == "huobi_cny_btc":
             coin_type = 1
         else:
             coin_type = 2
@@ -277,7 +275,7 @@ class BaseLiveStrategyEngine(object):
     def go(self):
         self.timeLog("log started at %s" % self.getStartRunningTime().strftime(self.TimeFormatForLog))
         self.dataLog(
-            content="time|huobi_cny|huobi_btc|huobi_ltc|huobi_cny_loan|huobi_btc_loan|huobi_ltc_loan|huobi_cny_frozen|huobi_btc_frozen|huobi_ltc_frozen|huobi_total|huobi_net")
+            content="time|huobi_cny_cash|huobi_cny_btc|huobi_cny_ltc|huobi_cny_cash_loan|huobi_cny_btc_loan|huobi_cny_ltc_loan|huobi_cny_cash_frozen|huobi_cny_btc_frozen|huobi_cny_ltc_frozen|huobi_cny_total|huobi_cny_net")
         self.dataLog()
 
         while (True):

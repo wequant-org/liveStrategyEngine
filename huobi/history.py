@@ -7,6 +7,7 @@
 #   沉迷量化，无法自拔
 ###############################################################
 
+
 import datetime
 import random
 
@@ -14,7 +15,7 @@ import pandas as pd
 
 from common.Errors import *
 
-valid_security_list = ["huobi-cnybtc", "huobi-cnyltc"]
+valid_security_list = ["huobi_cny_btc", "huobi_cny_ltc"]
 
 frequency_to_seconds = {
     "1m" : 60,
@@ -36,8 +37,7 @@ def get_current_price(security):
         raise ValueError("no valid 1 minute price")
     return minute_hist['close'][-1]
 
-
-# TODO:把真实数据接进来
+# TODO: 需要获取真实的历史数据，这里仅仅是一个Mock API
 def get_price(security, count=None, start_bar_time=None, end_bar_time=None, frequency="5m"):
     if count is not None and start_bar_time is not None:
         raise InvalidFilterError
@@ -53,7 +53,7 @@ def get_price(security, count=None, start_bar_time=None, end_bar_time=None, freq
                "close" : [],
                "volume":[]}
 
-    if security == "huobi-cnybtc":
+    if security == "huobi_cny_btc":
         base_price = 4000
         base_volume = 10
         std_dev = 30
@@ -138,11 +138,11 @@ def get_all_securities():
     result = {"security":[],
               "exchange":[],
               "settlement_currency":[]}
-    result["security"].append("huobi-cnybtc")
+    result["security"].append("huobi_cny_btc")
     result["exchange"].append("huobi")
     result["settlement_currency"].append("cny")
 
-    result["security"].append("huobi-cnyltc")
+    result["security"].append("huobi_cny_ltc")
     result["exchange"].append("huobi")
     result["settlement_currency"].append("cny")
     result = pd.DataFrame(result)

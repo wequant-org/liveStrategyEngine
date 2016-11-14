@@ -62,12 +62,3 @@ def getRoundedQuantity(qty, coin_type):
 
 def myRound(qty, decimal_places=4):
     return int(qty * math.pow(10, decimal_places))/int(math.pow(10,decimal_places))
-
-
-def getCoinStrFromPricerStr(pricer_str):
-    if pricer_str in ["huobi-cnybtc","huobi-usdbtc"]:
-        return "huobi_btc"
-    elif pricer_str in ["huobi-cnyltc","huobi-usdltc"]:
-        return "huobi_ltc"
-    else:
-        raise ValueError("invalid pricer_str %s"%pricer_str)
