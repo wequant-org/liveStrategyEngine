@@ -3,7 +3,8 @@
 
 import datetime
 #import userStrategy.SimpleMA as SimpleMA
-import userStrategy.SeaTurtle as SeaTurtle
+#import userStrategy.SeaTurtle as SeaTurtle
+import userStrategy.Grid as Grid
 from liveStrategyEngine.BaseLiveStrategyEngine import BaseLiveStrategyEngine
 
 if __name__ == "__main__":
@@ -14,9 +15,16 @@ if __name__ == "__main__":
     strat.go()
     '''
 
+    '''
     #SeaTurtle
     strat = BaseLiveStrategyEngine( SeaTurtle,datetime.datetime.now(), 0.1, 30, dailyExitTime="23:30:00")
     strat.go()
+    '''
+
+    #网格策略
+    strat = BaseLiveStrategyEngine( Grid,datetime.datetime.now(), 0.1, 30, dailyExitTime="23:30:00")
+    strat.go()
+
 
 
 
