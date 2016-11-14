@@ -46,6 +46,13 @@ coinTypeStructure = {
     }
 }
 
+def getCoinMarketTypeFromSecurity(security):
+     if security == "huobi_cny_btc":
+        return COIN_TYPE_BTC_CNY
+     elif security == "huobi_cny_ltc":
+        return COIN_TYPE_LTC_CNY
+     else:
+         raise ValueError("invalid security %s"%security)
 
 def getDictFromJSONString(str):
     return json.loads(str)

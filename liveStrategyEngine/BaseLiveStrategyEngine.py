@@ -32,24 +32,12 @@ class BaseLiveStrategyEngine(object):
         self.timeInterval = history.frequency_to_seconds[self.frequency]# 每次循环结束之后睡眠的时间, 单位：秒
         self.orderWaitingTime = orderWaitingTime  # 每次等待订单执行的最长时间
         self.dataLogFixedTimeWindow = dataLogFixedTimeWindow  # 每隔固定的时间打印账单信息，单位：秒
-
-        if self.security == "huobi_cny_btc":
-            self.coinMarketType = helper.COIN_TYPE_BTC_CNY
-        elif self.security == "huobi_cny_ltc":
-            self.coinMarketType = helper.COIN_TYPE_LTC_CNY
-        else:
-            raise TypeError("invalid security name '%s'"%self.security)
-
+        self.coinMarketType = helper.getCoinMarketTypeFromSecurity(self.security)
         self.dailyExitTime      = dailyExitTime #如果设置，则为每天程序的退出时间
         self.TimeFormatForFileName = "%Y%m%d%H%M%S%f"
         self.TimeFormatForLog = "%Y-%m-%d %H:%M:%S.%f"
         self.HuobiService = HuobiService
-
-        if self.coinMarketType in ["btc_cny","btc_usd"]:
-            coin_type = 1
-        else:
-            coin_type = 2
-
+        coin_type = helper.coinTypeStructure[self.coinMarketType]["huobi"]["coin_type"]
         self.huobi_min_quantity = self.HuobiService.getMinimumOrderQty(coin_type)
         self.huobi_min_cash_amount = self.HuobiService.getMinimumOrderCashAmount()
         self.last_data_log_time = None
@@ -210,10 +198,7 @@ class BaseLiveStrategyEngine(object):
             self.timeLog("交易数量:%s 小于火币要求的最小交易数量:%.4f, 所以无法下单"%(quantity,self.huobi_min_quantity))
             return
 
-        if security == "huobi_cny_btc":
-            coin_type = 1
-        else:
-            coin_type = 2
+        coin_type = helper.coinTypeStructure[self.coinMarketType]["huobi"]["coin_type"]
         res = self.HuobiService.sellMarket(coin_type, quantity, None, None, helper.coinTypeStructure[self.coinMarketType]["huobi"]["market"],SELL_MARKET)
         if u"result" not in res or res[u"result"] != u'success':
             self.timeLog("向火币下达市价卖单（交易数量：%s）失败"%quantity)
@@ -248,13 +233,8 @@ class BaseLiveStrategyEngine(object):
             self.timeLog("交易金额：%s 小于火币要求的最小交易金额：%.2f，所以无法下单"%(cash_amount,self.huobi_min_cash_amount))
             return
 
-        if security == "huobi_cny_btc":
-            coin_type = 1
-        else:
-            coin_type = 2
-
+        coin_type = helper.coinTypeStructure[self.coinMarketType]["huobi"]["coin_type"]
         res2 = self.HuobiService.buyMarket(coin_type, cash_amount, None, None,helper.coinTypeStructure[self.coinMarketType]["huobi"]["market"],BUY_MARKET)
-        #Qty2 = helper.myRound(cash_amount / current_sell_1_price)
         if u"result" not in res2 or res2[u"result"] != u'success':
             self.timeLog("向火币下达市价买单（交易金额：%s）失败"%cash_amount)
             return
