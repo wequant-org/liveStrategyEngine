@@ -304,7 +304,7 @@ class BanzhuanStrategy(object):
                 self.timeLog("抵达每日终结时间：%s, 现在退出." % self.dailyExitTime)
                 break
 
-            self.timeLog("等待 %f 秒进入下一个循环..." % self.timeInterval)
+            self.timeLog("等待 %d 秒进入下一个循环..." % self.timeInterval)
             time.sleep(self.timeInterval)
 
             # calculate the net asset at a fixed time window

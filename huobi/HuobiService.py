@@ -250,3 +250,12 @@ def getMinimumOrderQty(coinType):
         return 0.001
     else:
         return 0.01
+
+
+'''
+获取最少交易金额
+火币上比特币交易及莱特币交易金额都是0.01的整数倍
+最小交易金额：1
+'''
+def getMinimumOrderCashAmount():
+    return 1

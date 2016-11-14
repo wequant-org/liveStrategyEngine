@@ -50,7 +50,8 @@ class BaseLiveStrategyEngine(object):
         else:
             coin_type = 2
 
-        self.huobi_min = self.HuobiService.getMinimumOrderQty(coin_type)
+        self.huobi_min_quantity = self.HuobiService.getMinimumOrderQty(coin_type)
+        self.huobi_min_cash_amount = self.HuobiService.getMinimumOrderCashAmount()
         self.last_data_log_time = None
 
         # setup timeLogger
@@ -198,15 +199,15 @@ class BaseLiveStrategyEngine(object):
         self.sell(security,quantity)
 
     def sell(self, security, quantity): #quantity is a string value
-        self.timeLog("rounding down the quantity to 4 decimal places...")
-        self.timeLog("original value:%s"%quantity)
+        self.timeLog("交易数量只保留到小数点后4位...")
+        self.timeLog("原始交易数量:%s"%quantity)
         tmp = float(quantity)
         tmp = helper.myRound(tmp,4)
         quantity = str(tmp)
-        self.timeLog("rounded value:%s"%quantity)
+        self.timeLog("调整后的交易数量:%s"%quantity)
 
-        if float(quantity)<0.001:
-            self.timeLog("quantity %s is smaller than 0.001, so did not place the sell order into market"%quantity)
+        if float(quantity)<self.huobi_min_quantity:
+            self.timeLog("交易数量:%s 小于火币要求的最小交易数量:%.4f, 所以无法下单"%quantity,self.huobi_min_quantity)
             return
 
         if security == "huobi_cny_btc":
@@ -215,20 +216,20 @@ class BaseLiveStrategyEngine(object):
             coin_type = 2
         res = self.HuobiService.sellMarket(coin_type, quantity, None, None, helper.coinTypeStructure[self.coinMarketType]["huobi"]["market"],SELL_MARKET)
         if u"result" not in res or res[u"result"] != u'success':
-            self.timeLog("fail to place market sell order with qty %s into huobi" % quantity)
+            self.timeLog("向火币下达市价卖单（交易数量：%s）失败"%quantity)
             return
         order_id = res[u"id"]
         # 查询订单执行情况
         order_info = self.HuobiService.getOrderInfo(coin_type, order_id, helper.coinTypeStructure[self.coinMarketType]["huobi"]["market"],ORDER_INFO)
-        self.timeLog("placed below market sell order into huobi with quantity: %s" % quantity)
+        self.timeLog("向火币下达如下市价卖单（交易数量：%s）"%quantity)
         self.timeLog(str(order_info))
         if order_info["status"] != 2:
-            self.timeLog("waiting for %f for order to be completed" % self.orderWaitingTime)
+            self.timeLog("等待%d秒直至订单完成"%self.orderWaitingTime)
             time.sleep(self.orderWaitingTime)
             order_info = self.HuobiService.getOrderInfo(coin_type, order_id, helper.coinTypeStructure[self.coinMarketType]["huobi"]["market"], ORDER_INFO)
             self.timeLog(str(order_info))
         executed_qty = float(order_info["processed_amount"])
-        self.timeLog("the market sell order in huobi has been executed with filled quantity: %f, received cash: %.2f" % (executed_qty, executed_qty*float(order_info["processed_price"])))
+        self.timeLog("向火币下达的市价卖单已成功执行，订单成交数量：%f，收到的现金：%.2f"%(executed_qty, executed_qty*float(order_info["processed_price"])))
         self.dataLog()
 
     def buy_limit(self,security,price,quantity):
@@ -236,15 +237,15 @@ class BaseLiveStrategyEngine(object):
         self.buy(security,str(helper.myRound(float(price)*float(quantity),2)))
 
     def buy(self, security, cash_amount ): #cash_amount is a string value
-        self.timeLog("rounding down the cash amount to 2 decimal places...")
-        self.timeLog("original value:%s"%cash_amount)
+        self.timeLog("交易金额只保留到小数点后2位...")
+        self.timeLog("原始交易金额:%s"%cash_amount)
         tmp = float(cash_amount)
         tmp = helper.myRound(tmp,2)
         cash_amount = str(tmp)
-        self.timeLog("rounded value:%s"%cash_amount)
+        self.timeLog("调整后的交易金额:%s"%cash_amount)
 
-        if float(cash_amount)<1:
-            self.timeLog("cash amount %s is smaller than 1, so did not place the buy order into market"%cash_amount)
+        if float(cash_amount)<self.huobi_min_cash_amount:
+            self.timeLog("交易金额：%s 小于火币要求的最小交易金额：%.2f，所以无法下单"%cash_amount,self.huobi_min_cash_amount)
             return
 
         if security == "huobi_cny_btc":
@@ -255,25 +256,25 @@ class BaseLiveStrategyEngine(object):
         res2 = self.HuobiService.buyMarket(coin_type, cash_amount, None, None,helper.coinTypeStructure[self.coinMarketType]["huobi"]["market"],BUY_MARKET)
         #Qty2 = helper.myRound(cash_amount / current_sell_1_price)
         if u"result" not in res2 or res2[u"result"] != u'success':
-            self.timeLog("fail to place market buy order with cash amount %s into huobi" % cash_amount)
+            self.timeLog("向火币下达市价买单（交易金额：%s）失败"%cash_amount)
             return
         order2_id = res2[u"id"]
         # 查询订单执行情况
         order2_info = self.HuobiService.getOrderInfo(coin_type, order2_id, helper.coinTypeStructure[self.coinMarketType]["huobi"]["market"],ORDER_INFO)
-        self.timeLog("placed below market buy order into huobi with cash amount:%s" % cash_amount)
+        self.timeLog("向火币下达如下市价买单（交易金额：%s）"%cash_amount)
         self.timeLog(str(order2_info))
         if order2_info["status"] != 2:
-            self.timeLog("waiting for %f for order to be completed" % self.orderWaitingTime)
+            self.timeLog("等待%d秒直至订单完成"%self.orderWaitingTime)
             time.sleep(self.orderWaitingTime)
             order2_info = self.HuobiService.getOrderInfo(coin_type, order2_id, helper.coinTypeStructure[self.coinMarketType]["huobi"]["market"], ORDER_INFO)
             self.timeLog(str(order2_info))
         executed_qty_2 = float(order2_info["processed_amount"]) / float(order2_info["processed_price"])
-        self.timeLog("the market buy order in huobi has been executed with filled quantity: %f, spent cash: %.2f" % (executed_qty_2, float(order2_info["processed_amount"])))
+        self.timeLog("向火币下达的市价买单已成功执行，订单成交数量：%f，花费的现金：%.2f"%(executed_qty_2, float(order2_info["processed_amount"])))
         self.dataLog()
 
 
     def go(self):
-        self.timeLog("log started at %s" % self.getStartRunningTime().strftime(self.TimeFormatForLog))
+        self.timeLog("日志启动于 %s" % self.getStartRunningTime().strftime(self.TimeFormatForLog))
         self.dataLog(
             content="time|huobi_cny_cash|huobi_cny_btc|huobi_cny_ltc|huobi_cny_cash_loan|huobi_cny_btc_loan|huobi_cny_ltc_loan|huobi_cny_cash_frozen|huobi_cny_btc_frozen|huobi_cny_ltc_frozen|huobi_cny_total|huobi_cny_net")
         self.dataLog()
@@ -283,10 +284,10 @@ class BaseLiveStrategyEngine(object):
             if self.dailyExitTime is not None and datetime.datetime.now() > datetime.datetime.strptime(
                                     datetime.date.today().strftime("%Y-%m-%d") + " " + self.dailyExitTime,
                                     "%Y-%m-%d %H:%M:%S"):
-                self.timeLog("Reach the EOD cutoff time %s, exit now." % self.dailyExitTime)
+                self.timeLog("抵达每日终结时间：%s, 现在退出." % self.dailyExitTime)
                 break
 
-            self.timeLog("waiting for %f seconds for next cycle..." % self.timeInterval)
+            self.timeLog("等待 %d 秒进入下一个循环..." % self.timeInterval)
             #time.sleep(self.timeInterval)
             #TODO: to remove this line in production
             time.sleep(5)
