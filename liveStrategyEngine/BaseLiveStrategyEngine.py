@@ -207,7 +207,7 @@ class BaseLiveStrategyEngine(object):
         self.timeLog("调整后的交易数量:%s"%quantity)
 
         if float(quantity)<self.huobi_min_quantity:
-            self.timeLog("交易数量:%s 小于火币要求的最小交易数量:%.4f, 所以无法下单"%quantity,self.huobi_min_quantity)
+            self.timeLog("交易数量:%s 小于火币要求的最小交易数量:%.4f, 所以无法下单"%(quantity,self.huobi_min_quantity))
             return
 
         if security == "huobi_cny_btc":
@@ -245,7 +245,7 @@ class BaseLiveStrategyEngine(object):
         self.timeLog("调整后的交易金额:%s"%cash_amount)
 
         if float(cash_amount)<self.huobi_min_cash_amount:
-            self.timeLog("交易金额：%s 小于火币要求的最小交易金额：%.2f，所以无法下单"%cash_amount,self.huobi_min_cash_amount)
+            self.timeLog("交易金额：%s 小于火币要求的最小交易金额：%.2f，所以无法下单"%(cash_amount,self.huobi_min_cash_amount))
             return
 
         if security == "huobi_cny_btc":
