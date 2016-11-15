@@ -115,7 +115,7 @@ def handle_data(context):
         return
 
     # 获取当前价格
-    price = context.data.get_current_price(context.security)
+    price = context.data.get_current_price(context.security).iloc[0]['price']
 
     # 设置网格策略基础价格（base_price)
     if context.user_data.base_price is None:

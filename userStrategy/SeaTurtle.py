@@ -128,7 +128,7 @@ def handle_data(context):
         return
 
     # 拿分钟级别的数据，作为当前行情
-    price = context.data.get_current_price(context.security)
+    price = context.data.get_current_price(context.security).iloc[0]['price']
 
     # 1 计算ATR
     atr = calc_atr(hist)

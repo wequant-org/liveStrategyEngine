@@ -35,7 +35,10 @@ def get_current_price(security):
     minute_hist = minute_hist[minute_hist.security == security] # 只取security的数据
     if len(minute_hist.index)< 1:
         raise ValueError("no valid 1 minute price")
-    return minute_hist['close'][-1]
+    current_time = minute_hist['bar_time'][-1]
+    current_price = minute_hist['close'][-1]
+    result_pd = pd.DataFrame({'time': [current_time], 'security': [security], 'price': [current_price]})
+    return result_pd
 
 # TODO: 需要获取真实的历史数据，这里仅仅是一个Mock API
 def get_price(security, count=None, start_bar_time=None, end_bar_time=None, frequency="5m"):
