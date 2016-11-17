@@ -1,2 +1,4 @@
 config
 Config.py
+data/
+log/
