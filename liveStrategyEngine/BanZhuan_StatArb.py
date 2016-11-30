@@ -16,7 +16,7 @@ from common.Errors import StartRunningTimeEmptyError
 from huobi import HuobiService
 from huobi.Util import *
 from okcoin.Util import getOkcoinSpot
-
+import sys, traceback
 
 class BanzhuanStrategy_StatArb(object):
     def __init__(self, startRunningTime, orderRatio, timeInterval, orderWaitingTime, dataLogFixedTimeWindow,
@@ -610,13 +610,15 @@ if __name__ == "__main__":
             try:
                 strat.go()
             except Exception:
-                strat.timeLog(Exception)
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                traceback.print_tb(exc_traceback)
     else:
         while True:
             try:
                 strat.go()
             except Exception:
-                strat.timeLog(Exception)
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                traceback.print_tb(exc_traceback)
 
 
     '''
