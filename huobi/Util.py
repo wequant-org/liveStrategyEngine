@@ -77,7 +77,7 @@ def httpRequest(url, params):
     postdata = urllib.parse.urlencode(params)
     postdata = postdata.encode('utf-8')
 
-    fp = urllib.request.urlopen(url, postdata)
+    fp = urllib.request.urlopen(url, postdata, timeout=10)
     if fp.status != 200:
         return None
     else:
