@@ -18,7 +18,7 @@
 
 三、怎么执行main_banZhuan.py？
 如果是Mac或者Linux系统，直接在本项目的根目录下：
-chmod a+x run.sh
+chmod a+x run_banZhuan.sh
 ./run_banZhuan.sh
 
 如果是Windows系统，直接在本项目的根目录下：参考run_banZhuan.bat修改成您的系统对应的各项参数，然后直接运行run_banZhuan.bat
