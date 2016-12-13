@@ -1,28 +1,14 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-###############################################################
-#   获取更多免费策略，请加入WeQuant比特币量化策略交流QQ群：519538535
-#   群主邮箱：lanjason@foxmail.com，群主微信/QQ：64008672
-#   沉迷量化，无法自拔
-###############################################################
-
 # 客户端调用，用于查看API返回结果
-
-import okcoin.Config as config
-from okcoin.OkcoinFutureAPI import OKCoinFuture
-from okcoin.OkcoinSpotAPI import OKCoinSpot
-
-# 初始化apikey，secretkey,url
-apikey = config.apikey
-secretkey = config.secretkey
-okcoinRESTURL = config.okcoinRESTURL
+from exchangeConnection.okcoin.util import *
 
 # 现货API
-okcoinSpot = OKCoinSpot(okcoinRESTURL, apikey, secretkey)
+okcoinSpot = getOkcoinSpot()
 
 # 期货API
-okcoinFuture = OKCoinFuture(okcoinRESTURL, apikey, secretkey)
+okcoinFuture = getOkcoinFuture()
 
 print(u' 现货行情 ')
 print(okcoinSpot.ticker('btc_cny'))

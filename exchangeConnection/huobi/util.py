@@ -1,11 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-###############################################################
-#   获取更多免费策略，请加入WeQuant比特币量化策略交流QQ群：519538535
-#   群主邮箱：lanjason@foxmail.com，群主微信/QQ：64008672
-#   沉迷量化，无法自拔
-###############################################################
 
 import hashlib
 import time
@@ -13,13 +7,14 @@ import urllib
 import urllib.parse
 import urllib.request
 
-import huobi.Config as config
-from common import helper
+import requests
+
+import accountConfig
 
 # 在此输入您的Key
-ACCESS_KEY = config.ACCESS_KEY
-SECRET_KEY = config.SECRET_KEY
-HUOBI_SERVICE_API = config.HUOBI_SERVICE_API
+ACCESS_KEY = accountConfig.HUOBI["CNY_1"]["ACCESS_KEY"]
+SECRET_KEY = accountConfig.HUOBI["CNY_1"]["SECRET_KEY"]
+SERVICE_API = accountConfig.HUOBI["CNY_1"]["SERVICE_API"]
 
 ACCOUNT_INFO = "get_account_info"
 GET_ORDERS = "get_orders"
@@ -46,9 +41,8 @@ def send2api(pParams, extra):
             v = extra.get(k)
             if (v != None):
                 pParams[k] = v
-            # pParams.update(extra)
-    tResult = httpRequest(HUOBI_SERVICE_API, pParams)
-    return helper.getDictFromJSONString(tResult)
+                # pParams.update(extra)
+    return httpRequest(SERVICE_API, pParams)
 
 
 '''
@@ -74,10 +68,11 @@ request
 
 
 def httpRequest(url, params):
+    '''
     postdata = urllib.parse.urlencode(params)
     postdata = postdata.encode('utf-8')
 
-    fp = urllib.request.urlopen(url, postdata, timeout=10)
+    fp = urllib.request.urlopen(url, postdata, timeout = 20)
     if fp.status != 200:
         return None
     else:
@@ -85,3 +80,15 @@ def httpRequest(url, params):
         mystr = mybytes.decode("utf8")
         fp.close()
         return mystr
+    '''
+    headers = {
+        "Content-type": "application/x-www-form-urlencoded",
+    }
+
+    postdata = urllib.parse.urlencode(params)
+    # postdata = postdata.encode('utf-8')
+    response = requests.post(url, postdata, headers=headers, timeout=20)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        raise Exception("httpPost failed, detail is:%s" % response.text)

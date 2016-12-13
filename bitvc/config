@@ -1,5 +1,0 @@
-[API]
-base = https://api.bitvc.com/api/
-futurebase = https://api.bitvc.com/futures/
-key = <1234-5678-9012>,修改成你自己的key，不用加任何引号或者<>
-secret = <1234-5678-9012>,修改成你自己的secret，不用加任何引号或者<>

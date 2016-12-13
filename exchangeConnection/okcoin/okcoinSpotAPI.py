@@ -1,14 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-###############################################################
-#   获取更多免费策略，请加入WeQuant比特币量化策略交流QQ群：519538535
-#   群主邮箱：lanjason@foxmail.com，群主微信/QQ：64008672
-#   沉迷量化，无法自拔
-###############################################################
-
 # 用于访问OKCOIN 现货REST API
-from okcoin.HttpMD5Util import buildMySign, httpGet, httpPost
+from exchangeConnection.okcoin.httpMD5Util import buildMySign, httpGet, httpPost
+from utils.helper import *
 
 
 class OKCoinSpot:
@@ -127,7 +122,7 @@ class OKCoinSpot:
     # 获取最小订单数量
     # okcoin上比特币的交易数量是0.01的整数倍，莱特币交易数量是0.1的整数倍
     def getMinimumOrderQty(self, symbol):
-        if symbol == 'btc_cny':
+        if symbol == COIN_TYPE_BTC_CNY:
             return 0.01 * 1
         else:
             return 0.1 * 1

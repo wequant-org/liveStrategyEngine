@@ -1,13 +1,8 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-###############################################################
-#   获取更多免费策略，请加入WeQuant比特币量化策略交流QQ群：519538535
-#   群主邮箱：lanjason@foxmail.com，群主微信/QQ：64008672
-#   沉迷量化，无法自拔
-###############################################################
-
-from huobi.Util import *
+from exchangeConnection.huobi.util import *
+from utils.helper import *
 
 '''
 获取账号详情
@@ -197,21 +192,20 @@ def cancelOrder(coinType, id, market, method):
 '''
 
 
-def getTicker(coinType, market ):
-    if market == "cny":
-        if coinType == 1:
+def getTicker(coinType, market):
+    if market == COIN_TYPE_CNY:
+        if coinType == HUOBI_COIN_TYPE_BTC:
             url = "http://api.huobi.com/staticmarket/ticker_btc_json.js"
         else:
             url = "http://api.huobi.com/staticmarket/ticker_ltc_json.js"
-    elif market == "usd":
-        if coinType == 1:
+    elif market == COIN_TYPE_USD:
+        if coinType == HUOBI_COIN_TYPE_BTC:
             url = "http://api.huobi.com/usdmarket/ticker_btc_json.js"
         else:
-            raise ValueError("invalid coinType %d for market %s" %(coinType, market))
+            raise ValueError("invalid coinType %d for market %s" % (coinType, market))
     else:
         raise ValueError("invalid market %s" % market)
-    r = httpRequest(url, {})
-    return helper.getDictFromJSONString(r)
+    return httpRequest(url, {})
 
 
 '''
@@ -222,21 +216,19 @@ def getTicker(coinType, market ):
 
 
 def getDepth(coinType, market, depth_size=5):
-    if market == "cny":
-        if coinType == 1:
+    if market == COIN_TYPE_CNY:
+        if coinType == HUOBI_COIN_TYPE_BTC:
             url = "http://api.huobi.com/staticmarket/depth_btc_" + str(depth_size) + ".js"
         else:
             url = "http://api.huobi.com/staticmarket/depth_ltc_" + str(depth_size) + ".js"
-    elif market == "usd":
-        if coinType == 1:
-            url = "http://api.huobi.com/usdmarket/depth_btc_"+str(depth_size)+".js"
+    elif market == COIN_TYPE_USD:
+        if coinType == HUOBI_COIN_TYPE_BTC:
+            url = "http://api.huobi.com/usdmarket/depth_btc_" + str(depth_size) + ".js"
         else:
-            raise ValueError("invalid coinType %d for market %s" %(coinType, market))
+            raise ValueError("invalid coinType %d for market %s" % (coinType, market))
     else:
         raise ValueError("invalid market %s" % market)
-
-    r = httpRequest(url, {})
-    return helper.getDictFromJSONString(r)
+    return httpRequest(url, {})
 
 
 '''
@@ -245,8 +237,10 @@ def getDepth(coinType, market, depth_size=5):
 火币上比特币交易及莱特币交易都是0.0001的整数倍
 比特币最小交易数量：0.001,莱特币最小交易数量：0.01
 '''
+
+
 def getMinimumOrderQty(coinType):
-    if coinType == 1:
+    if coinType == HUOBI_COIN_TYPE_BTC:
         return 0.001
     else:
         return 0.01
@@ -257,5 +251,7 @@ def getMinimumOrderQty(coinType):
 火币上比特币交易及莱特币交易金额都是0.01的整数倍
 最小交易金额：1
 '''
+
+
 def getMinimumOrderCashAmount():
     return 1

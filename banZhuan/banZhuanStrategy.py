@@ -9,14 +9,17 @@
 
 import datetime
 import logging
+
 from common.Errors import StartRunningTimeEmptyError
-from huobi import HuobiService
-from huobi.Util import *
-from okcoin.Util import getOkcoinSpot
+from exchangeConnection.huobi import huobiService
+from exchangeConnection.huobi.util import *
+from exchangeConnection.okcoin.util import getOkcoinSpot
+from utils import helper
 
 
-class BanzhuanStrategy(object):
-    def __init__(self, startRunningTime, orderRatio, timeInterval, orderWaitingTime, dataLogFixedTimeWindow, coinMarketType,
+class BanZhuanStrategy(object):
+    def __init__(self, startRunningTime, orderRatio, timeInterval, orderWaitingTime, dataLogFixedTimeWindow,
+                 coinMarketType,
                  dailyExitTime=None):
         self.startRunningTime = startRunningTime
         self.orderRatio = orderRatio  # 每次预计能吃到的盘口深度的百分比
@@ -27,13 +30,15 @@ class BanzhuanStrategy(object):
         self.dailyExitTime = dailyExitTime
         self.TimeFormatForFileName = "%Y%m%d%H%M%S%f"
         self.TimeFormatForLog = "%Y-%m-%d %H:%M:%S.%f"
-        self.OKCoinService = getOkcoinSpot()
-        self.HuobiService = HuobiService
-        self.huobi_min_quantity = self.HuobiService.getMinimumOrderQty(helper.coinTypeStructure[self.coinMarketType]["huobi"]["coin_type"])
-        self.huobi_min_cash_amount = self.HuobiService.getMinimumOrderCashAmount()
-        self.okcoin_min_quantity = self.OKCoinService.getMinimumOrderQty(helper.coinTypeStructure[self.coinMarketType]["okcoin"]["coin_type"])
-        #okcoin 的比特币最小市价买单下单金额是：0.01BTC*比特币当时市价
-        #okcoin 的莱特币最小市价买单下单金额是：0.1LTC*莱特币当时市价
+        self.okcoinService = getOkcoinSpot()
+        self.huobiService = huobiService
+        self.huobi_min_quantity = self.huobiService.getMinimumOrderQty(
+            helper.coinTypeStructure[self.coinMarketType]["huobi"]["coin_type"])
+        self.huobi_min_cash_amount = self.huobiService.getMinimumOrderCashAmount()
+        self.okcoin_min_quantity = self.okcoinService.getMinimumOrderQty(
+            helper.coinTypeStructure[self.coinMarketType]["okcoin"]["coin_type"])
+        # okcoin 的比特币最小市价买单下单金额是：0.01BTC*比特币当时市价
+        # okcoin 的莱特币最小市价买单下单金额是：0.1LTC*莱特币当时市价
         self.last_data_log_time = None
 
         # setup timeLogger
@@ -44,7 +49,7 @@ class BanzhuanStrategy(object):
         self.consoleLogHandler = logging.StreamHandler()
         self.consoleLogHandler.setLevel(logging.DEBUG)
         # 定义handler的输出格式
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
         self.timeLogHandler.setFormatter(formatter)
         self.consoleLogHandler.setFormatter(formatter)
         # 给timeLogger添加handler
@@ -64,16 +69,19 @@ class BanzhuanStrategy(object):
         return self.startRunningTime
 
     def getTimeLogFileName(self):
-        return "../log/log_%s.txt" % self.getStartRunningTime().strftime(self.TimeFormatForFileName)
+        return "log/%s_log_%s.txt" % (
+            self.__class__.__name__, self.getStartRunningTime().strftime(self.TimeFormatForFileName))
 
     def getDataLogFileName(self):
-        return "../data/data_%s.data" % self.getStartRunningTime().strftime(self.TimeFormatForFileName)
+        return "data/%s_data_%s.data" % (
+            self.__class__.__name__, self.getStartRunningTime().strftime(self.TimeFormatForFileName))
 
     def timeLog(self, content):
         self.timeLogger.info(content)
 
     def getAccuntInfo(self):
-        huobiAcct = self.HuobiService.getAccountInfo(helper.coinTypeStructure[self.coinMarketType]["huobi"]["market"],ACCOUNT_INFO)
+        huobiAcct = self.huobiService.getAccountInfo(helper.coinTypeStructure[self.coinMarketType]["huobi"]["market"],
+                                                     ACCOUNT_INFO)
         huobi_cny_cash = float(huobiAcct[u'available_cny_display'])
         huobi_cny_btc = float(huobiAcct[u'available_btc_display'])
         huobi_cny_ltc = float(huobiAcct[u'available_ltc_display'])
@@ -86,7 +94,7 @@ class BanzhuanStrategy(object):
         huobi_cny_total = float(huobiAcct[u'total'])
         huobi_cny_net = float(huobiAcct[u'net_asset'])
 
-        okcoinAcct = self.OKCoinService.userinfo()
+        okcoinAcct = self.okcoinService.userinfo()
         okcoin_cny_cash = float(okcoinAcct["info"]["funds"]["free"]["cny"])
         okcoin_cny_btc = float(okcoinAcct["info"]["funds"]["free"]["btc"])
         okcoin_cny_ltc = float(okcoinAcct["info"]["funds"]["free"]["ltc"])
@@ -150,98 +158,115 @@ class BanzhuanStrategy(object):
             self.last_data_log_time = t
         self.dataLogger.info("%s" % str(content))
 
-    def sell(self, security, quantity, exchange="huobi"): #quantity is a string value
+    def sell(self, security, quantity, exchange="huobi"):  # quantity is a string value
         if exchange == "huobi":
             self.timeLog("开始下达火币市价卖单...")
             self.timeLog("只保留下单数量的小数点后4位...")
-            self.timeLog("原始下单数量:%s"%quantity)
+            self.timeLog("原始下单数量:%s" % quantity)
             tmp = float(quantity)
-            tmp = helper.myRound(tmp,4)
+            tmp = helper.downRound(tmp, 4)
             quantity = str(tmp)
-            self.timeLog("做完小数点处理后的下单数量:%s"%quantity)
-            if float(quantity)<self.huobi_min_quantity:
+            self.timeLog("做完小数点处理后的下单数量:%s" % quantity)
+            if float(quantity) < self.huobi_min_quantity:
                 self.timeLog(
-                            "数量:%s 小于交易所最小交易数量(火币最小数量:%f),因此无法下单,此处忽略该信号"%(quantity, self.huobi_min_quantity))
+                    "数量:%s 小于交易所最小交易数量(火币最小数量:%f),因此无法下单,此处忽略该信号" % (quantity, self.huobi_min_quantity))
                 return None
 
             coin_type = helper.coinTypeStructure[self.coinMarketType]["huobi"]["coin_type"]
-            res = self.HuobiService.sellMarket(coin_type, quantity, None, None, helper.coinTypeStructure[self.coinMarketType]["huobi"]["market"],SELL_MARKET)
+            res = self.huobiService.sellMarket(coin_type, quantity, None, None,
+                                               helper.coinTypeStructure[self.coinMarketType]["huobi"]["market"],
+                                               SELL_MARKET)
             if u"result" not in res or res[u"result"] != u'success':
-                self.timeLog("下达火币市价卖单（数量：%s）失败！"%quantity)
+                self.timeLog("下达火币市价卖单（数量：%s）失败！" % quantity)
                 return None
             order_id = res[u"id"]
             # 查询订单执行情况
-            order_info = self.HuobiService.getOrderInfo(coin_type, order_id, helper.coinTypeStructure[self.coinMarketType]["huobi"]["market"],ORDER_INFO)
-            self.timeLog("下达如下火币市价卖单，数量：%s"%quantity)
+            order_info = self.huobiService.getOrderInfo(coin_type, order_id,
+                                                        helper.coinTypeStructure[self.coinMarketType]["huobi"][
+                                                            "market"], ORDER_INFO)
+            self.timeLog("下达如下火币市价卖单，数量：%s" % quantity)
             self.timeLog(str(order_info))
             if order_info["status"] != 2:
                 self.timeLog("等待%f秒直至订单完成" % self.orderWaitingTime)
                 time.sleep(self.orderWaitingTime)
-                order_info = self.HuobiService.getOrderInfo(coin_type, order_id, helper.coinTypeStructure[self.coinMarketType]["huobi"]["market"], ORDER_INFO)
+                order_info = self.huobiService.getOrderInfo(coin_type, order_id,
+                                                            helper.coinTypeStructure[self.coinMarketType]["huobi"][
+                                                                "market"], ORDER_INFO)
                 self.timeLog(str(order_info))
             executed_qty = float(order_info["processed_amount"])
-            self.timeLog("火币市价卖单已被执行，执行数量：%f，收到的现金：%.2f" % (executed_qty, executed_qty*float(order_info["processed_price"])))
+            self.timeLog(
+                "火币市价卖单已被执行，执行数量：%f，收到的现金：%.2f" % (executed_qty, executed_qty * float(order_info["processed_price"])))
             self.dataLog()
             return executed_qty
         elif exchange == "okcoin":
             self.timeLog("开始下达okcoin市价卖单...")
             self.timeLog("只保留下单数量的小数点后2位...")
-            self.timeLog("原始下单数量:%s"%quantity)
+            self.timeLog("原始下单数量:%s" % quantity)
             tmp = float(quantity)
-            tmp = helper.myRound(tmp,2)
+            tmp = helper.downRound(tmp, 2)
             quantity = str(tmp)
-            self.timeLog("做完小数点处理后的下单数量:%s"%quantity)
-            if float(quantity)<self.okcoin_min_quantity:
+            self.timeLog("做完小数点处理后的下单数量:%s" % quantity)
+            if float(quantity) < self.okcoin_min_quantity:
                 self.timeLog(
-                            "数量:%s 小于交易所最小交易数量(火币最小数量:%f),因此无法下单,此处忽略该信号"%(quantity, self.okcoin_min_quantity))
+                    "数量:%s 小于交易所最小交易数量(火币最小数量:%f),因此无法下单,此处忽略该信号" % (quantity, self.okcoin_min_quantity))
                 return None
-            res = self.OKCoinService.trade(helper.coinTypeStructure[self.coinMarketType]["okcoin"]["coin_type"], "sell_market", amount=quantity)
+            res = self.okcoinService.trade(helper.coinTypeStructure[self.coinMarketType]["okcoin"]["coin_type"],
+                                           "sell_market", amount=quantity)
             if "result" not in res or res["result"] != True:
-                self.timeLog("下达okcoin市价卖单（数量：%s）失败"%quantity)
+                self.timeLog("下达okcoin市价卖单（数量：%s）失败" % quantity)
                 return None
             order_id = res["order_id"]
             # 查询订单执行情况
-            order_info = self.OKCoinService.orderinfo(helper.coinTypeStructure[self.coinMarketType]["okcoin"]["coin_type"], str(order_id))
-            self.timeLog("下达如下okcoin市价卖单，数量：%s"%quantity)
+            order_info = self.okcoinService.orderinfo(
+                helper.coinTypeStructure[self.coinMarketType]["okcoin"]["coin_type"], str(order_id))
+            self.timeLog("下达如下okcoin市价卖单，数量：%s" % quantity)
             self.timeLog(str(order_info))
             if order_info["orders"][0]["status"] != 2:
                 self.timeLog("等待%.1f秒直至订单完成" % self.orderWaitingTime)
                 time.sleep(self.orderWaitingTime)
-                order_info = self.OKCoinService.orderinfo(helper.coinTypeStructure[self.coinMarketType]["okcoin"]["coin_type"], str(order_id))
+                order_info = self.okcoinService.orderinfo(
+                    helper.coinTypeStructure[self.coinMarketType]["okcoin"]["coin_type"], str(order_id))
                 self.timeLog(str(order_info))
             executed_qty = order_info["orders"][0]["deal_amount"]
-            self.timeLog("okcoin市价卖单已被执行，执行数量：%f，收到的现金：%.2f"%(executed_qty,executed_qty*order_info["orders"][0]["avg_price"]))
+            self.timeLog("okcoin市价卖单已被执行，执行数量：%f，收到的现金：%.2f" % (
+                executed_qty, executed_qty * order_info["orders"][0]["avg_price"]))
             self.dataLog()
             return executed_qty
 
-    def buy(self, security, cash_amount, exchange="huobi",sell_1_price=None): #cash_amount is a string value
+    def buy(self, security, cash_amount, exchange="huobi", sell_1_price=None):  # cash_amount is a string value
         if exchange == "huobi":
             self.timeLog("开始下达火币市价买单...")
             self.timeLog("只保留下单数量的小数点后2位...")
-            self.timeLog("原始下单金额:%s"%cash_amount)
+            self.timeLog("原始下单金额:%s" % cash_amount)
             tmp = float(cash_amount)
-            tmp = helper.myRound(tmp,2)
+            tmp = helper.downRound(tmp, 2)
             cash_amount = str(tmp)
-            self.timeLog("做完小数点处理后的下单金额:%s"%cash_amount)
+            self.timeLog("做完小数点处理后的下单金额:%s" % cash_amount)
 
-            if float(cash_amount)<self.huobi_min_cash_amount:
-                self.timeLog("金额:%s 小于交易所最小交易金额(火币最小金额:1元),因此无法下单,此处忽略该信号"%(cash_amount,self.huobi_min_cash_amount))
+            if float(cash_amount) < self.huobi_min_cash_amount:
+                self.timeLog("金额:%s 小于交易所最小交易金额(火币最小金额:1元),因此无法下单,此处忽略该信号" % (cash_amount, self.huobi_min_cash_amount))
                 return None
 
             coin_type = helper.coinTypeStructure[self.coinMarketType]["huobi"]["coin_type"]
-            res = self.HuobiService.buyMarket(coin_type, cash_amount, None, None, helper.coinTypeStructure[self.coinMarketType]["huobi"]["market"],BUY_MARKET)
+            res = self.huobiService.buyMarket(coin_type, cash_amount, None, None,
+                                              helper.coinTypeStructure[self.coinMarketType]["huobi"]["market"],
+                                              BUY_MARKET)
             if u"result" not in res or res[u"result"] != u'success':
-                self.timeLog("下达火币市价买单（金额：%s）失败！"%cash_amount)
+                self.timeLog("下达火币市价买单（金额：%s）失败！" % cash_amount)
                 return None
             order_id = res[u"id"]
             # 查询订单执行情况
-            order_info = self.HuobiService.getOrderInfo(coin_type, order_id, helper.coinTypeStructure[self.coinMarketType]["huobi"]["market"],ORDER_INFO)
-            self.timeLog("下达如下火币市价买单，金额：%s"%cash_amount)
+            order_info = self.huobiService.getOrderInfo(coin_type, order_id,
+                                                        helper.coinTypeStructure[self.coinMarketType]["huobi"][
+                                                            "market"], ORDER_INFO)
+            self.timeLog("下达如下火币市价买单，金额：%s" % cash_amount)
             self.timeLog(str(order_info))
             if order_info["status"] != 2:
                 self.timeLog("等待%f秒直至订单完成" % self.orderWaitingTime)
                 time.sleep(self.orderWaitingTime)
-                order_info = self.HuobiService.getOrderInfo(coin_type, order_id, helper.coinTypeStructure[self.coinMarketType]["huobi"]["market"], ORDER_INFO)
+                order_info = self.huobiService.getOrderInfo(coin_type, order_id,
+                                                            helper.coinTypeStructure[self.coinMarketType]["huobi"][
+                                                                "market"], ORDER_INFO)
                 self.timeLog(str(order_info))
             executed_qty = float(order_info["processed_amount"]) / float(order_info["processed_price"])
             self.timeLog("火币市价买单已被执行，执行数量：%f，花费的现金：%.2f" % (executed_qty, float(order_info["processed_amount"])))
@@ -252,33 +277,38 @@ class BanzhuanStrategy(object):
                 raise ValueError("处理okcoin市价买单之前，需要提供当前Okcoin卖一的价格信息，请检查传入的sell_1_price参数是否完备！")
             self.timeLog("开始下达okcoin市价买单...")
             self.timeLog("只保留下单数量的小数点后2位...")
-            self.timeLog("原始下单金额:%s"%cash_amount)
+            self.timeLog("原始下单金额:%s" % cash_amount)
             tmp = float(cash_amount)
-            tmp = helper.myRound(tmp,2)
+            tmp = helper.downRound(tmp, 2)
             cash_amount = str(tmp)
-            self.timeLog("做完小数点处理后的下单金额:%s"%cash_amount)
+            self.timeLog("做完小数点处理后的下单金额:%s" % cash_amount)
 
-            if float(cash_amount)<self.okcoin_min_quantity*sell_1_price:
+            if float(cash_amount) < self.okcoin_min_quantity * sell_1_price:
                 self.timeLog(
-                            "金额:%s 不足以购买交易所最小交易数量(okcoin最小数量:%f，当前卖一价格%.2f,最小金额要求：%.2f),因此无法下单,此处忽略该信号"%(cash_amount,self.okcoin_min_quantity,sell_1_price,self.okcoin_min_quantity*sell_1_price))
+                    "金额:%s 不足以购买交易所最小交易数量(okcoin最小数量:%f，当前卖一价格%.2f,最小金额要求：%.2f),因此无法下单,此处忽略该信号" % (
+                        cash_amount, self.okcoin_min_quantity, sell_1_price, self.okcoin_min_quantity * sell_1_price))
                 return None
-            res = self.OKCoinService.trade(helper.coinTypeStructure[self.coinMarketType]["okcoin"]["coin_type"], "buy_market",price=cash_amount)
+            res = self.okcoinService.trade(helper.coinTypeStructure[self.coinMarketType]["okcoin"]["coin_type"],
+                                           "buy_market", price=cash_amount)
 
             if "result" not in res or res["result"] != True:
-                self.timeLog("下达okcoin市价买单（金额：%s）失败"%cash_amount)
+                self.timeLog("下达okcoin市价买单（金额：%s）失败" % cash_amount)
                 return None
             order_id = res["order_id"]
             # 查询订单执行情况
-            order_info = self.OKCoinService.orderinfo(helper.coinTypeStructure[self.coinMarketType]["okcoin"]["coin_type"], str(order_id))
-            self.timeLog("下达如下okcoin市价买单，金额：%s"%cash_amount)
+            order_info = self.okcoinService.orderinfo(
+                helper.coinTypeStructure[self.coinMarketType]["okcoin"]["coin_type"], str(order_id))
+            self.timeLog("下达如下okcoin市价买单，金额：%s" % cash_amount)
             self.timeLog(str(order_info))
             if order_info["orders"][0]["status"] != 2:
                 self.timeLog("等待%.1f秒直至订单完成" % self.orderWaitingTime)
                 time.sleep(self.orderWaitingTime)
-                order_info = self.OKCoinService.orderinfo(helper.coinTypeStructure[self.coinMarketType]["okcoin"]["coin_type"], str(order_id))
+                order_info = self.okcoinService.orderinfo(
+                    helper.coinTypeStructure[self.coinMarketType]["okcoin"]["coin_type"], str(order_id))
                 self.timeLog(str(order_info))
             executed_qty = order_info["orders"][0]["deal_amount"]
-            self.timeLog("okcoin市价买单已被执行，执行数量：%f，花费的现金：%.2f"%(executed_qty,executed_qty*order_info["orders"][0]["avg_price"]))
+            self.timeLog("okcoin市价买单已被执行，执行数量：%f，花费的现金：%.2f" % (
+                executed_qty, executed_qty * order_info["orders"][0]["avg_price"]))
             self.dataLog()
             return executed_qty
 
@@ -292,7 +322,7 @@ class BanzhuanStrategy(object):
             # check whether current time is after the dailyExitTime, if yes, exit
             if self.dailyExitTime is not None and datetime.datetime.now() > datetime.datetime.strptime(
                                     datetime.date.today().strftime("%Y-%m-%d") + " " + self.dailyExitTime,
-                                    "%Y-%m-%d %H:%M:%S"):
+                    "%Y-%m-%d %H:%M:%S"):
                 self.timeLog("抵达每日终结时间：%s, 现在退出." % self.dailyExitTime)
                 break
 
@@ -308,9 +338,11 @@ class BanzhuanStrategy(object):
             accountInfo = self.getAccuntInfo()
 
             # 查询huobi第一档深度数据
-            huobiDepth = self.HuobiService.getDepth(helper.coinTypeStructure[self.coinMarketType]["huobi"]["coin_type"],helper.coinTypeStructure[self.coinMarketType]["huobi"]["market"], depth_size=1)
+            huobiDepth = self.huobiService.getDepth(helper.coinTypeStructure[self.coinMarketType]["huobi"]["coin_type"],
+                                                    helper.coinTypeStructure[self.coinMarketType]["huobi"]["market"],
+                                                    depth_size=1)
             # 查询okcoin第一档深度数据
-            okcoinDepth = self.OKCoinService.depth(helper.coinTypeStructure[self.coinMarketType]["okcoin"]["coin_type"])
+            okcoinDepth = self.okcoinService.depth(helper.coinTypeStructure[self.coinMarketType]["okcoin"]["coin_type"])
 
             huobi_sell_1_price = huobiDepth["asks"][0][0]
             huobi_sell_1_qty = huobiDepth["asks"][0][1]
@@ -328,24 +360,33 @@ class BanzhuanStrategy(object):
                 self.timeLog("okcoin深度:%s" % str(okcoinDepth))
 
                 # 每次只能吃掉一定ratio的深度
-                Qty = helper.myRound(min(huobi_buy_1_qty, okcoin_sell_1_qty) * self.orderRatio, 4)
+                Qty = helper.downRound(min(huobi_buy_1_qty, okcoin_sell_1_qty) * self.orderRatio, 4)
                 # 每次搬砖前要检查是否有足够security和cash
-                Qty = min(Qty, accountInfo[helper.coinTypeStructure[self.coinMarketType]["huobi"]["coin_str"]], helper.myRound(accountInfo[helper.coinTypeStructure[self.coinMarketType]["okcoin"]["market_str"]] / okcoin_sell_1_price, 4))
-                Qty = helper.myRound(Qty,4)
+                Qty = min(Qty, accountInfo[helper.coinTypeStructure[self.coinMarketType]["huobi"]["coin_str"]],
+                          helper.downRound(accountInfo[helper.coinTypeStructure[self.coinMarketType]["okcoin"][
+                              "market_str"]] / okcoin_sell_1_price, 4))
+                Qty = helper.downRound(Qty, 4)
                 Qty = helper.getRoundedQuantity(Qty, self.coinMarketType)
 
                 if Qty < self.huobi_min_quantity or Qty < self.okcoin_min_quantity:
                     self.timeLog(
-                        "数量:%f 小于交易所最小交易数量(火币最小数量:%f, okcoin最小数量:%f),因此无法下单并忽略该信号" %(Qty, self.huobi_min_quantity, self.okcoin_min_quantity))
+                        "数量:%f 小于交易所最小交易数量(火币最小数量:%f, okcoin最小数量:%f),因此无法下单并忽略该信号" % (
+                            Qty, self.huobi_min_quantity, self.okcoin_min_quantity))
                     continue
                 else:
                     # step1: 先处理卖
-                    executed_qty = self.sell(self.coinMarketType,str(Qty),exchange="huobi")
+                    executed_qty = self.sell(self.coinMarketType, str(Qty), exchange="huobi")
                     if executed_qty is not None:
                         # step2: 再执行买
                         Qty2 = min(executed_qty, Qty)
-                        Qty2 = max(helper.getRoundedQuantity(Qty2,self.coinMarketType),self.okcoin_min_quantity)
-                        self.buy(self.coinMarketType,str(Qty2*okcoin_sell_1_price),exchange="okcoin",sell_1_price=okcoin_sell_1_price)
+                        Qty2 = max(helper.getRoundedQuantity(Qty2, self.coinMarketType), self.okcoin_min_quantity)
+
+                    if Qty2 < self.okcoin_min_quantity * 1.05:
+                        self.buy(self.coinMarketType, str(Qty2 * okcoin_sell_1_price * 1.05), exchange="okcoin",
+                                 sell_1_price=okcoin_sell_1_price)
+                    else:
+                        self.buy(self.coinMarketType, str(Qty2 * okcoin_sell_1_price), exchange="okcoin",
+                                 sell_1_price=okcoin_sell_1_price)
 
             elif okcoin_buy_1_price > huobi_sell_1_price:  # 获利信号：OKcoin卖，huobi买
                 self.timeLog("发现信号")
@@ -353,33 +394,21 @@ class BanzhuanStrategy(object):
                 self.timeLog("okcoin深度:%s" % str(okcoinDepth))
 
                 # 每次只能吃掉一定ratio的深度
-                Qty = helper.myRound(min(huobi_sell_1_qty, okcoin_buy_1_qty) * self.orderRatio, 4)
+                Qty = helper.downRound(min(huobi_sell_1_qty, okcoin_buy_1_qty) * self.orderRatio, 4)
                 # 每次搬砖前要检查是否有足够security和cash
-                Qty = min(Qty, accountInfo[helper.coinTypeStructure[self.coinMarketType]["okcoin"]["coin_str"]], helper.myRound(accountInfo[helper.coinTypeStructure[self.coinMarketType]["huobi"]["market_str"]] / huobi_sell_1_price), 4)
+                Qty = min(Qty, accountInfo[helper.coinTypeStructure[self.coinMarketType]["okcoin"]["coin_str"]],
+                          helper.downRound(accountInfo[helper.coinTypeStructure[self.coinMarketType]["huobi"][
+                              "market_str"]] / huobi_sell_1_price), 4)
                 Qty = helper.getRoundedQuantity(Qty, self.coinMarketType)
 
                 if Qty < self.huobi_min_quantity or Qty < self.okcoin_min_quantity:
-                    self.timeLog("数量:%f 小于交易所最小交易数量(火币最小数量:%f, okcoin最小数量:%f),因此无法下单并忽略该信号"%(Qty, self.huobi_min_quantity, self.okcoin_min_quantity))
+                    self.timeLog("数量:%f 小于交易所最小交易数量(火币最小数量:%f, okcoin最小数量:%f),因此无法下单并忽略该信号" % (
+                        Qty, self.huobi_min_quantity, self.okcoin_min_quantity))
                     continue
                 else:
                     # step1: 先处理卖
-                    executed_qty = self.sell(self.coinMarketType,str(Qty),exchange="okcoin")
+                    executed_qty = self.sell(self.coinMarketType, str(Qty), exchange="okcoin")
                     if executed_qty is not None:
                         # step2: 再执行买
                         Qty2 = min(executed_qty, Qty)
-                        self.buy(self.coinMarketType,str(Qty2*huobi_sell_1_price),exchange="huobi")
-
-
-if __name__ == "__main__":
-    # btc
-    strat = BanzhuanStrategy(datetime.datetime.now(), 0.8, 1, 0.1, 30, helper.COIN_TYPE_BTC_CNY, dailyExitTime="23:30:00")
-    strat.go()
-
-    '''
-    # ltc
-    strat = BanzhuanStrategy(datetime.datetime.now(), 0.8, 1, 0.1, 30, helper.COIN_TYPE_LTC_CNY, dailyExitTime="23:30:00")
-    strat.go()
-    '''
-
-
-
+                        self.buy(self.coinMarketType, str(Qty2 * huobi_sell_1_price), exchange="huobi")
