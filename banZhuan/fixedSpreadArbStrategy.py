@@ -148,17 +148,17 @@ class FixedSpreadSignalGenerator(StatArbSignalGenerator):
                     continue
                 else:
                     # step1: 先处理卖
-                    executed_qty = self.sell(self.coinMarketType, str(Qty), exchange="huobi")
+                    executed_qty = self.sell_market(self.coinMarketType, str(Qty), exchange="huobi")
                     if executed_qty is not None:
                         # step2: 再执行买
                         Qty2 = min(executed_qty, Qty)
                         Qty2 = max(helper.getRoundedQuantity(Qty2, self.coinMarketType), self.okcoin_min_quantity)
 
                         if Qty2 < self.okcoin_min_quantity * 1.05:
-                            self.buy(self.coinMarketType, str(Qty2 * okcoin_sell_1_price * 1.05), exchange="okcoin",
+                            self.buy_market(self.coinMarketType, str(Qty2 * okcoin_sell_1_price * 1.05), exchange="okcoin",
                                      sell_1_price=okcoin_sell_1_price)
                         else:
-                            self.buy(self.coinMarketType, str(Qty2 * okcoin_sell_1_price), exchange="okcoin",
+                            self.buy_market(self.coinMarketType, str(Qty2 * okcoin_sell_1_price), exchange="okcoin",
                                      sell_1_price=okcoin_sell_1_price)
 
                     if self.current_position_direction == 0 or self.current_position_direction == 1:
@@ -204,11 +204,11 @@ class FixedSpreadSignalGenerator(StatArbSignalGenerator):
                     continue
                 else:
                     # step1: 先处理卖
-                    executed_qty = self.sell(self.coinMarketType, str(Qty), exchange="okcoin")
+                    executed_qty = self.sell_market(self.coinMarketType, str(Qty), exchange="okcoin")
                     if executed_qty is not None:
                         # step2: 再执行买
                         Qty2 = min(executed_qty, Qty)
-                        self.buy(self.coinMarketType, str(Qty2 * huobi_sell_1_price), exchange="huobi")
+                        self.buy_market(self.coinMarketType, str(Qty2 * huobi_sell_1_price), exchange="huobi")
                     if self.current_position_direction == 0 or self.current_position_direction == 2:
                         self.spread2_pos_qty += Qty2
                     elif self.current_position_direction == 1:
