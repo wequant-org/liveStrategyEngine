@@ -4,13 +4,25 @@
 from banZhuan.statArbStrategy import *
 
 
+###############################################################
+#   获取更多免费策略，请加入WeQuant比特币量化策略交流QQ群：519538535
+#   群主邮箱：lanjason@foxmail.com，群主微信/QQ：64008672
+#   沉迷量化，无法自拔
+###############################################################
+
+
 class FixedSpreadSignalGenerator(StatArbSignalGenerator):
     def __init__(self, startRunningTime, orderRatio, timeInterval, orderWaitingTime, dataLogFixedTimeWindow,
-                 coinMarketType, open_diff, close_diff, maximum_qty_multiplier=None,
+                 coinMarketType, open_diff, close_diff, maximum_qty_multiplier=None, auto_rebalance_on=False,
+                 auto_rebalance_on_exit=False,
                  dailyExitTime=None):
         super(FixedSpreadSignalGenerator, self).__init__(startRunningTime, orderRatio, timeInterval, orderWaitingTime,
                                                          dataLogFixedTimeWindow,
-                                                         coinMarketType, dailyExitTime)
+                                                         coinMarketType,
+                                                         maximum_qty_multiplier=maximum_qty_multiplier,
+                                                         auto_rebalance_on=auto_rebalance_on,
+                                                         auto_rebalance_on_exit=auto_rebalance_on_exit,
+                                                         dailyExitTime=dailyExitTime)
         self.open_diff = open_diff
         self.close_diff = close_diff
 
