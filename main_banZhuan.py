@@ -28,8 +28,8 @@ if __name__ == "__main__":
     '''
     strat = StatArbSignalGenerator(datetime.datetime.now(), 0.8, 1, 0.1, 60, helper.COIN_TYPE_BTC_CNY,
                                    maximum_qty_multiplier=3,
-                                   auto_rebalance_on=False,
-                                   auto_rebalance_on_exit=False,
+                                   auto_rebalance_on=True,
+                                   auto_rebalance_on_exit=True,
                                    dailyExitTime="23:30:00")
     '''
 
