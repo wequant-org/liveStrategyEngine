@@ -43,8 +43,8 @@ if __name__ == "__main__":
 
     # 固定价差套利搬砖 - BTC
     strat = FixedSpreadSignalGenerator(datetime.datetime.now(), 0.8, 1, 0.1, 60, helper.COIN_TYPE_BTC_CNY,
-                                       0.003,
                                        0.001,
+                                       0.0005,
                                        maximum_qty_multiplier=3,
                                        auto_rebalance_on=False,
                                        auto_rebalance_on_exit=False)

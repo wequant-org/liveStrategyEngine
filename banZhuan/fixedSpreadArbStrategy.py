@@ -142,9 +142,11 @@ class FixedSpreadSignalGenerator(StatArbSignalGenerator):
                 Qty = helper.getRoundedQuantity(Qty, self.coinMarketType)
 
                 if Qty < self.huobi_min_quantity or Qty < self.okcoin_min_quantity:
-                    self.timeLog(
-                        "数量:%f 小于交易所最小交易数量(火币最小数量:%f, okcoin最小数量:%f),因此无法下单并忽略该信号" % (
-                            Qty, self.huobi_min_quantity, self.okcoin_min_quantity), level=logging.WARN)
+                    self.timeLog("当前在火币的币量：%.4f，OKCoin的现金：%.2f" % (
+                    accountInfo[helper.coinTypeStructure[self.coinMarketType]["huobi"]["coin_str"]],
+                    accountInfo[helper.coinTypeStructure[self.coinMarketType]["okcoin"]["market_str"]]))
+                    self.timeLog("可交易的数量:%.4f 小于交易所最小交易数量(火币最小数量:%.4f, OKCoin最小数量:%.4f),因此无法下单并忽略该信号" % (
+                    Qty, self.huobi_min_quantity, self.okcoin_min_quantity), level=logging.WARN)
                     continue
                 else:
                     # step1: 先处理卖
@@ -155,11 +157,12 @@ class FixedSpreadSignalGenerator(StatArbSignalGenerator):
                         Qty2 = max(helper.getRoundedQuantity(Qty2, self.coinMarketType), self.okcoin_min_quantity)
 
                         if Qty2 < self.okcoin_min_quantity * 1.05:
-                            self.buy_market(self.coinMarketType, str(Qty2 * okcoin_sell_1_price * 1.05), exchange="okcoin",
-                                     sell_1_price=okcoin_sell_1_price)
+                            self.buy_market(self.coinMarketType, str(Qty2 * okcoin_sell_1_price * 1.05),
+                                            exchange="okcoin",
+                                            sell_1_price=okcoin_sell_1_price)
                         else:
                             self.buy_market(self.coinMarketType, str(Qty2 * okcoin_sell_1_price), exchange="okcoin",
-                                     sell_1_price=okcoin_sell_1_price)
+                                            sell_1_price=okcoin_sell_1_price)
 
                     if self.current_position_direction == 0 or self.current_position_direction == 1:
                         self.spread1_pos_qty += Qty2
@@ -199,8 +202,11 @@ class FixedSpreadSignalGenerator(StatArbSignalGenerator):
                 Qty = helper.getRoundedQuantity(Qty, self.coinMarketType)
 
                 if Qty < self.huobi_min_quantity or Qty < self.okcoin_min_quantity:
-                    self.timeLog("数量:%f 小于交易所最小交易数量(火币最小数量:%f, okcoin最小数量:%f),因此无法下单并忽略该信号" % (
-                        Qty, self.huobi_min_quantity, self.okcoin_min_quantity), level=logging.WARN)
+                    self.timeLog("当前在OKCoin的币量：%.4f，火币的现金：%.2f" % (
+                    accountInfo[helper.coinTypeStructure[self.coinMarketType]["okcoin"]["coin_str"]],
+                    accountInfo[helper.coinTypeStructure[self.coinMarketType]["huobi"]["market_str"]]))
+                    self.timeLog("可交易数量:%.4f 小于交易所最小交易数量(火币最小数量:%.4f, OKCoin最小数量:%.4f),因此无法下单并忽略该信号" % (
+                    Qty, self.huobi_min_quantity, self.okcoin_min_quantity), level=logging.WARN)
                     continue
                 else:
                     # step1: 先处理卖
