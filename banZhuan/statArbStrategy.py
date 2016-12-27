@@ -148,7 +148,7 @@ class StatArbSignalGenerator(object):
         huobi_cny_total = float(huobiAcct[u'total'])
         huobi_cny_net = float(huobiAcct[u'net_asset'])
 
-        okcoinAcct = self.OKCoinService.userinfo()
+        okcoinAcct = self.OKCoinService.userInfo()
         okcoin_cny_cash = float(okcoinAcct["info"]["funds"]["free"]["cny"])
         okcoin_cny_btc = float(okcoinAcct["info"]["funds"]["free"]["btc"])
         okcoin_cny_ltc = float(okcoinAcct["info"]["funds"]["free"]["ltc"])
@@ -275,7 +275,7 @@ class StatArbSignalGenerator(object):
                 return None
             order_id = res["order_id"]
             # 查询订单执行情况
-            order_info = self.OKCoinService.orderinfo(coin_type, str(order_id))
+            order_info = self.OKCoinService.orderInfo(coin_type, str(order_id))
             self.timeLog("下达如下okcoin限价卖单，数量：%s, 价格：%s" % (quantity, price))
             self.timeLog(str(order_info))
 
@@ -283,20 +283,20 @@ class StatArbSignalGenerator(object):
             while retry_time < self.okcoin_order_query_retry_maximum_times and order_info["orders"][0]["status"] != 2:
                 self.timeLog("等待%.1f秒直至订单完成" % self.orderWaitingTime)
                 time.sleep(self.orderWaitingTime)
-                order_info = self.OKCoinService.orderinfo(coin_type, str(order_id))
+                order_info = self.OKCoinService.orderInfo(coin_type, str(order_id))
                 self.timeLog(str(order_info))
                 retry_time += 1
 
             if order_info["orders"][0]["status"] != 2:
-                cancel_result = self.OKCoinService.CancelOrder(coin_type, str(order_id))
+                cancel_result = self.OKCoinService.cancelOrder(coin_type, str(order_id))
                 retry_time = 0
                 while retry_time < self.okcoin_order_cancel_query_retry_maximum_times and helper.componentExtract(
                         cancel_result, u"result", "") != True:
                     self.timeLog("等待%f秒直至订单取消完成" % self.orderWaitingTime)
                     time.sleep(self.orderWaitingTime)
-                    cancel_result = self.OKCoinService.CancelOrder(coin_type, str(order_id))
+                    cancel_result = self.OKCoinService.cancelOrder(coin_type, str(order_id))
                     retry_time += 1
-                order_info = self.OKCoinService.orderinfo(coin_type, str(order_id))
+                order_info = self.OKCoinService.orderInfo(coin_type, str(order_id))
 
             executed_qty = order_info["orders"][0]["deal_amount"]
             self.timeLog("okcoin限价卖单已被执行，执行数量：%f，收到的现金：%.2f" % (
@@ -368,7 +368,7 @@ class StatArbSignalGenerator(object):
                 return None
             order_id = res["order_id"]
             # 查询订单执行情况
-            order_info = self.OKCoinService.orderinfo(coin_type, str(order_id))
+            order_info = self.OKCoinService.orderInfo(coin_type, str(order_id))
             self.timeLog("下达如下okcoin市价卖单，数量：%s" % quantity)
             self.timeLog(str(order_info))
 
@@ -376,7 +376,7 @@ class StatArbSignalGenerator(object):
             while retry_time < self.okcoin_order_query_retry_maximum_times and order_info["orders"][0]["status"] != 2:
                 self.timeLog("等待%.1f秒直至订单完成" % self.orderWaitingTime)
                 time.sleep(self.orderWaitingTime)
-                order_info = self.OKCoinService.orderinfo(coin_type, str(order_id))
+                order_info = self.OKCoinService.orderInfo(coin_type, str(order_id))
                 self.timeLog(str(order_info))
                 retry_time += 1
 
@@ -484,7 +484,7 @@ class StatArbSignalGenerator(object):
 
             order_id = res["order_id"]
             # 查询订单执行情况
-            order_info = self.OKCoinService.orderinfo(coin_type, str(order_id))
+            order_info = self.OKCoinService.orderInfo(coin_type, str(order_id))
             self.timeLog("下达如下okcoin限价买单，数量：%s，价格：%s" % (quantity, price))
             self.timeLog(str(order_info))
 
@@ -492,20 +492,20 @@ class StatArbSignalGenerator(object):
             while retry_time < self.okcoin_order_query_retry_maximum_times and order_info["orders"][0]["status"] != 2:
                 self.timeLog("等待%.1f秒直至订单完成" % self.orderWaitingTime)
                 time.sleep(self.orderWaitingTime)
-                order_info = self.OKCoinService.orderinfo(coin_type, str(order_id))
+                order_info = self.OKCoinService.orderInfo(coin_type, str(order_id))
                 self.timeLog(str(order_info))
                 retry_time += 1
 
             if order_info["orders"][0]["status"] != 2:
-                cancel_result = self.OKCoinService.CancelOrder(coin_type, str(order_id))
+                cancel_result = self.OKCoinService.cancelOrder(coin_type, str(order_id))
                 retry_time = 0
                 while retry_time < self.okcoin_order_cancel_query_retry_maximum_times and helper.componentExtract(
                         cancel_result, u"result", "") != True:
                     self.timeLog("等待%f秒直至订单取消完成" % self.orderWaitingTime)
                     time.sleep(self.orderWaitingTime)
-                    cancel_result = self.OKCoinService.CancelOrder(coin_type, str(order_id))
+                    cancel_result = self.OKCoinService.cancelOrder(coin_type, str(order_id))
                     retry_time += 1
-                order_info = self.OKCoinService.orderinfo(coin_type, str(order_id))
+                order_info = self.OKCoinService.orderInfo(coin_type, str(order_id))
 
             executed_qty = order_info["orders"][0]["deal_amount"]
             self.timeLog("okcoin限价买单已被执行，执行数量：%f，花费的现金：%.2f" % (
@@ -585,7 +585,7 @@ class StatArbSignalGenerator(object):
                 return None
             order_id = res["order_id"]
             # 查询订单执行情况
-            order_info = self.OKCoinService.orderinfo(coin_type, str(order_id))
+            order_info = self.OKCoinService.orderInfo(coin_type, str(order_id))
             self.timeLog("下达如下okcoin市价买单，金额：%s" % cash_amount)
             self.timeLog(str(order_info))
 
@@ -593,7 +593,7 @@ class StatArbSignalGenerator(object):
             while retry_time < self.okcoin_order_query_retry_maximum_times and order_info["orders"][0]["status"] != 2:
                 self.timeLog("等待%.1f秒直至订单完成" % self.orderWaitingTime)
                 time.sleep(self.orderWaitingTime)
-                order_info = self.OKCoinService.orderinfo(coin_type, str(order_id))
+                order_info = self.OKCoinService.orderInfo(coin_type, str(order_id))
                 self.timeLog(str(order_info))
                 retry_time += 1
 

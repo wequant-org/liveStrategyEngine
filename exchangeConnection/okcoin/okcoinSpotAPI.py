@@ -21,11 +21,11 @@ class OKCoinSpot:
         return httpGet(self.__url, TICKER_RESOURCE, params)
 
     # 获取OKCOIN现货市场深度信息
-    def depth(self, symbol=''):
+    def depth(self, symbol='', size=1):
         DEPTH_RESOURCE = "/api/v1/depth.do"
         params = ''
         if symbol:
-            params = 'symbol=%(symbol)s&size=1' % {'symbol': symbol}
+            params = 'symbol=%(symbol)s&size=%(size)d' % {'symbol': symbol, 'size': size}
         return httpGet(self.__url, DEPTH_RESOURCE, params)
 
     # 获取OKCOIN现货历史交易信息
@@ -37,7 +37,7 @@ class OKCoinSpot:
         return httpGet(self.__url, TRADES_RESOURCE, params)
 
     # 获取用户现货账户信息
-    def userinfo(self):
+    def userInfo(self):
         USERINFO_RESOURCE = "/api/v1/userinfo.do"
         params = {}
         params['api_key'] = self.__apikey
@@ -84,7 +84,7 @@ class OKCoinSpot:
         return httpPost(self.__url, CANCEL_ORDER_RESOURCE, params)
 
     # 现货订单信息查询
-    def orderinfo(self, symbol, orderId):
+    def orderInfo(self, symbol, orderId):
         ORDER_INFO_RESOURCE = "/api/v1/order_info.do"
         params = {
             'api_key': self.__apikey,
@@ -95,7 +95,7 @@ class OKCoinSpot:
         return httpPost(self.__url, ORDER_INFO_RESOURCE, params)
 
     # 现货批量订单信息查询
-    def ordersinfo(self, symbol, orderId, tradeType):
+    def ordersInfo(self, symbol, orderId, tradeType):
         ORDERS_INFO_RESOURCE = "/api/v1/orders_info.do"
         params = {
             'api_key': self.__apikey,

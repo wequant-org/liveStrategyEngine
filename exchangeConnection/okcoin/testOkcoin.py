@@ -17,31 +17,31 @@ print(u' 现货深度 ')
 print(okcoinSpot.depth('btc_cny'))
 
 print(u' 用户现货账户信息 ')
-print(okcoinSpot.userinfo())
+print(okcoinSpot.userInfo())
 
 '''print (u' 现货下单 ')
 print (okcoinSpot.trade('btc_cny','buy_market','50'))'''
 
 print(u' 用户现货账户信息 ')
-print(okcoinSpot.userinfo())
+print(okcoinSpot.userInfo())
 
 print(u' 现货订单信息查询 ')
-print(type(okcoinSpot.orderinfo('btc_cny', '6122509921')))
-print(okcoinSpot.orderinfo('btc_cny', '6122509921'))
+print(type(okcoinSpot.orderInfo('btc_cny', '6122509921')))
+print(okcoinSpot.orderInfo('btc_cny', '6122509921'))
 
 print(u' 现货下单 ')
 # print (okcoinSpot.trade('btc_cny','buy_market','50'))
 
 print(u' 用户现货账户信息 ')
-print(type(okcoinSpot.userinfo()))
-print(okcoinSpot.userinfo())
+print(type(okcoinSpot.userInfo()))
+print(okcoinSpot.userInfo())
 
 
 # print (u' 现货历史交易信息 ')
 # print (okcoinSpot.trades())
 
 # print (u' 用户现货账户信息 ')
-# print (okcoinSpot.userinfo())
+# print (okcoinSpot.userInfo())
 
 # print (u' 现货下单 ')
 # print (okcoinSpot.trade('ltc_usd','buy','0.1','0.2'))
@@ -53,10 +53,10 @@ print(okcoinSpot.userinfo())
 # print (okcoinSpot.cancelOrder('ltc_usd','18243073'))
 
 # print (u' 现货订单信息查询 ')
-# print (okcoinSpot.orderinfo('ltc_usd','18243644'))
+# print (okcoinSpot.orderInfo('ltc_usd','18243644'))
 
 # print (u' 现货批量订单信息查询 ')
-# print (okcoinSpot.ordersinfo('ltc_usd','18243800,18243801,18243644','0'))
+# print (okcoinSpot.ordersInfo('ltc_usd','18243800,18243801,18243644','0'))
 
 # print (u' 现货历史订单信息查询 ')
 # print (okcoinSpot.orderHistory('ltc_usd','0','1','2'))
@@ -95,7 +95,7 @@ print(okcoinSpot.userinfo())
 # print (okcoinFuture.future_cancel('ltc_usd','this_week','47231499'))
 
 # print (u'期货获取订单信息')
-# print (okcoinFuture.future_orderinfo('ltc_usd','this_week','47231812','0','1','2'))
+# print (okcoinFuture.future_orderInfo('ltc_usd','this_week','47231812','0','1','2'))
 
 # print (u'期货逐仓账户信息')
 # print (okcoinFuture.future_userinfo_4fix())
