@@ -24,10 +24,12 @@ chmod a+x run_banZhuan.sh
 如果是Windows系统，直接在本项目的根目录下：参考run_banZhuan.bat修改成您的系统对应的各项参数，然后直接运行run_banZhuan.bat
 
 四、怎么执行main_userStrategy.py？
+请不要跑main_userStrategy里面的策略，因为历史数据现在是Mock出来的
+
+今后拿到实盘数据的话，可以尝试跑一下。怎么跑？
 如果是Mac或者Linux系统，直接在本项目的根目录下：
 chmod a+x run_userStrategy.sh
 ./run_userStrategy.sh
-
 如果是Windows系统，直接在本项目的根目录下：参考run_userStrategy.bat修改成您的系统对应的各项参数，然后直接运行run_userStrategy.bat
 
 
