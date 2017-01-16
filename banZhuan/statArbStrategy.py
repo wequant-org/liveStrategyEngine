@@ -658,25 +658,30 @@ class StatArbSignalGenerator(object):
     # 判断开仓、平仓
     def in_or_out(self):
         if self.current_position_direction == 0:  # currently no spread position
-            if (self.spread1List[
-                    -1] - self.spread1_mean) / self.spread1_stdev > self.spread1_open_condition_stdev_coe:  # huobi > okcoin
+            if (self.spread1List[-1] - self.spread1_mean) / self.spread1_stdev > self.spread1_open_condition_stdev_coe:  # huobi > okcoin
                 return 1  # buy okcoin, sell huobi
-            elif (self.spread2List[
-                      -1] - self.spread2_mean) / self.spread2_stdev > self.spread2_open_condition_stdev_coe:  # okcoin > huobi
+            elif (self.spread2List[-1] - self.spread2_mean) / self.spread2_stdev > self.spread2_open_condition_stdev_coe:  # okcoin > huobi
                 return 2  # sell okcoin, buy huobi
         elif self.current_position_direction == 1:  # currently long spread1
-            if (self.spread1List[
-                    -1] - self.spread1_mean) / self.spread1_stdev > self.spread1_open_condition_stdev_coe:  # huobi > okcoin
+            if (self.spread1List[-1] - self.spread1_mean) / self.spread1_stdev > self.spread1_open_condition_stdev_coe:  # huobi > okcoin
                 return 1  # continue to buy okcoin, sell huobi, meaning upsizing spread1
-            if (self.spread1List[-1] - self.spread1_mean) / self.spread1_stdev < self.spread1_close_condition_stdev_coe:
+            if (self.spread2List[-1] - self.spread2_mean) / self.spread2_stdev > -self.spread1_close_condition_stdev_coe: # spread1 close is using the price data of spread2, so check spread2 here
                 return 2  # unwind spread1
         elif self.current_position_direction == 2:  # currently long spread1
-            if (self.spread2List[
-                    -1] - self.spread2_mean) / self.spread2_stdev > self.spread2_open_condition_stdev_coe:  # okcoin > huobi
+            if (self.spread2List[-1] - self.spread2_mean) / self.spread2_stdev > self.spread2_open_condition_stdev_coe:  # okcoin > huobi
                 return 2  # continue to sell okcoin, buy huobi, meaning upsizing spread2
-            if (self.spread2List[-1] - self.spread2_mean) / self.spread2_stdev < self.spread2_close_condition_stdev_coe:
+            if (self.spread1List[-1] - self.spread1_mean) / self.spread1_stdev > -self.spread2_close_condition_stdev_coe: # spread2 close is using the price data of spread1, so check spread1 here
                 return 1  # unwind spread2
         return 0  # no action
+
+     # 向list添加1个元素，当list长度大于某个定值时，会将前面超出的部分删除
+    def add_to_list(self, dest_list, element, max_length):
+        if max_length == 1:
+            return [element]
+        while len(dest_list) >= max_length:
+            del (dest_list[0])
+        dest_list.append(element)
+        return dest_list
 
     # 主要的逻辑
     def go(self):
@@ -713,8 +718,8 @@ class StatArbSignalGenerator(object):
             okcoin_buy_1_qty = okcoinDepth["bids"][0][1]
             spread1 = huobi_buy_1_price - okcoin_sell_1_price
             spread2 = okcoin_buy_1_price - huobi_sell_1_price
-            self.spread1List.append(spread1)
-            self.spread2List.append(spread2)
+            self.spread1List = self.add_to_list(self.spread1List, spread1, self.sma_window_size)
+            self.spread2List = self.add_to_list(self.spread2List, spread2, self.sma_window_size)
             max_price = np.max([huobi_sell_1_price, huobi_buy_1_price, okcoin_sell_1_price, okcoin_buy_1_price])
 
             if len(self.spread1List) < self.sma_window_size:

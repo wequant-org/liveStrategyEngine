@@ -36,12 +36,12 @@ class FixedSpreadSignalGenerator(StatArbSignalGenerator):
         elif self.current_position_direction == 1:  # currently long spread1
             if self.spread1List[-1] / ref_price > self.open_diff:  # huobi > okcoin
                 return 1  # continue to buy okcoin, sell huobi, meaning upsizing spread1
-            if self.spread1List[-1] / ref_price < self.close_diff:
+            if self.spread2List[-1] / ref_price > -self.close_diff:  # spread1 close is using the price data of spread2, so check spread2 here
                 return 2  # unwind spread1
         elif self.current_position_direction == 2:  # currently long spread1
             if self.spread2List[-1] / ref_price > self.open_diff:  # okcoin > huobi
                 return 2  # continue to sell okcoin, buy huobi, meaning upsizing spread2
-            if self.spread2List[-1] / ref_price < self.close_diff:
+            if self.spread1List[-1] / ref_price > -self.close_diff: # spread2 close is using the price data of spread1, so check spread1 here
                 return 1  # unwind spread2
         return 0  # no action
 
@@ -80,8 +80,8 @@ class FixedSpreadSignalGenerator(StatArbSignalGenerator):
             okcoin_buy_1_qty = okcoinDepth["bids"][0][1]
             spread1 = huobi_buy_1_price - okcoin_sell_1_price
             spread2 = okcoin_buy_1_price - huobi_sell_1_price
-            self.spread1List.append(spread1)
-            self.spread2List.append(spread2)
+            self.spread1List = self.add_to_list(self.spread1List, spread1, 1)
+            self.spread2List = self.add_to_list(self.spread2List, spread2, 1)
             max_price = np.max([huobi_sell_1_price, huobi_buy_1_price, okcoin_sell_1_price, okcoin_buy_1_price])
 
             # 获取当前账户信息
